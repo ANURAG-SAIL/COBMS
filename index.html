@@ -1,0 +1,2556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coke Oven Battery Management System — CO&CCD · BSP SAIL</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="module">
+  window.FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBQjiKCNHbgCrP_nHxnq01nwmNgzdGzSqk",
+  authDomain: "opms-aff06.firebaseapp.com",
+  projectId: "opms-aff06",
+  storageBucket: "opms-aff06.firebasestorage.app",
+  messagingSenderId: "75493518079",
+  appId: "1:75493518079:web:ffa31c7a3a9d4a64f6baca",
+  measurementId: "G-MYT3T3CD8P"
+  };
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, deleteDoc, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const app = initializeApp(window.FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  enableIndexedDbPersistence(db).catch(() => {});
+  window.FB = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, deleteDoc, serverTimestamp };
+  window.dispatchEvent(new Event('fb-ready'));
+</script>
+<style>
+:root{--navy:#0f2942;--navy-2:#1a3a5c;--navy-3:#24507a;--blue:#3b82f6;--blue-soft:#dbeafe;--bg:#e8edf2;--panel:#fff;--border:#d1dae5;--border-2:#e5ecf3;--text:#0f2942;--text-2:#4b6076;--muted:#7a8ea3;--green:#16a34a;--green-soft:#dcfce7;--amber:#f59e0b;--amber-soft:#fef3c7;--red:#dc2626;--red-soft:#fee2e2;--gray-soft:#f1f5f9;--shadow:0 2px 12px rgba(15,41,66,.08);--shadow-md:0 4px 20px rgba(15,41,66,.12);--shadow-lg:0 8px 30px rgba(15,41,66,.16);}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',-apple-system,Roboto,Oxygen,Ubuntu,sans-serif;}
+body{background:linear-gradient(135deg,#e8edf2 0%,#dde5ed 100%);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5;}
+.auth-wrap{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#0f2942 0%,#1a3a5c 50%,#24507a 100%);}
+.auth-card{width:100%;max-width:500px;background:#fff;padding:44px 40px;border-radius:20px;box-shadow:0 25px 70px rgba(0,0,0,.4);}
+.sail-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;}
+.sail-logo img{width:130px;height:auto;margin-bottom:14px;}
+.sail-logo .hindi{margin-top:4px;font-size:26px;font-weight:700;color:var(--navy);letter-spacing:1px;}
+.sail-logo .sail{font-size:34px;font-weight:800;color:var(--navy);letter-spacing:4px;}
+.auth-card h1{font-size:26px;text-align:center;color:var(--navy);margin-bottom:6px;font-weight:800;letter-spacing:1px;}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:15px;margin-bottom:6px;}
+.auth-card .sub2{text-align:center;color:var(--navy-3);font-size:19px;font-weight:700;letter-spacing:4px;margin-bottom:26px;}
+.auth-tabs{display:flex;background:var(--gray-soft);border-radius:14px;padding:5px;margin-bottom:24px;}
+.auth-tab{flex:1;padding:13px;text-align:center;cursor:pointer;font-size:15px;font-weight:600;color:var(--muted);border-radius:11px;transition:.2s;}
+.auth-tab.active{background:var(--navy);color:#fff;box-shadow:0 4px 12px rgba(15,41,66,.25);}
+label.lbl{display:block;font-size:12px;color:var(--text-2);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
+input,select,textarea{width:100%;padding:14px 16px;background:#f8fafc;border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;outline:none;transition:.15s;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(59,130,246,.15);}
+textarea{resize:vertical;min-height:80px;}
+button{padding:13px 24px;background:var(--navy);color:#fff;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;transition:.15s;font-family:inherit;}
+button:hover{background:var(--navy-2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,41,66,.2);}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+button.secondary{background:#fff;color:var(--navy);border:1.5px solid var(--border);}
+button.secondary:hover{background:var(--gray-soft);}
+button.danger{background:var(--red);}
+button.success{background:var(--green);}
+button.full{width:100%;}
+button.small{padding:7px 14px;font-size:13px;border-radius:10px;}
+button.tiny{padding:4px 10px;font-size:12px;border-radius:8px;}
+.msg{padding:13px 16px;border-radius:12px;font-size:14px;margin-bottom:16px;font-weight:500;}
+.msg.error{background:var(--red-soft);color:#991b1b;border:1px solid #fca5a5;}
+.msg.success{background:var(--green-soft);color:#166534;border:1px solid #86efac;}
+.msg.info{background:var(--blue-soft);color:#1e40af;border:1px solid #93c5fd;}
+.msg.warn{background:var(--amber-soft);color:#92400e;border:1px solid #fcd34d;}
+#app{display:none;padding:20px;min-height:100vh;}
+.container{max-width:1600px;margin:0 auto;}
+.topbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);border-radius:18px;padding:20px 28px;display:flex;align-items:center;gap:20px;box-shadow:var(--shadow-lg);margin-bottom:18px;color:#fff;flex-wrap:wrap;}
+.topbar .brand{display:flex;align-items:center;gap:14px;}
+.topbar .brand img{width:60px;height:auto;background:#fff;border-radius:12px;padding:6px;}
+.topbar .brand .text h1{font-size:18px;font-weight:700;line-height:1.2;}
+.topbar .brand .text p{font-size:12px;color:#a9c1db;margin-top:2px;}
+.topbar .user-block{display:flex;align-items:center;gap:14px;margin-left:auto;}
+.avatar{width:46px;height:46px;background:#fff;color:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;}
+.user-block .info{text-align:right;}
+.user-block .info .n{font-size:15px;font-weight:600;}
+.user-block .info .r{font-size:12px;color:#a9c1db;}
+.tabs-bar{background:#fff;border-radius:16px;padding:8px;display:flex;gap:6px;box-shadow:var(--shadow);margin-bottom:22px;flex-wrap:wrap;}
+.tab-item{padding:11px 18px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);transition:.15s;display:flex;align-items:center;gap:7px;}
+.tab-item:hover{color:var(--navy);background:var(--gray-soft);}
+.tab-item.active{background:var(--navy);color:#fff;box-shadow:0 4px 12px rgba(15,41,66,.2);}
+.card{background:#fff;border-radius:16px;box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden;}
+.card-head{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);padding:16px 26px;display:flex;justify-content:space-between;align-items:center;color:#fff;flex-wrap:wrap;gap:12px;}
+.card-head h2{font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.card-head .tag{background:rgba(255,255,255,.15);padding:5px 14px;border-radius:10px;font-size:12px;font-weight:600;}
+.card-body{padding:26px;}
+.section-label{font-size:13px;color:var(--text-2);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin:24px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--border-2);}
+.section-label:first-child{margin-top:0;}
+.grid{display:grid;gap:16px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.row-end{justify-content:flex-end;margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--border-2);}
+th{background:var(--gray-soft);color:var(--text-2);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+tr:hover td{background:#f8fafc;}
+td input,td select{padding:7px 10px;font-size:13px;}
+.pill{display:inline-block;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:600;margin:2px;}
+.pill.blue{background:var(--blue-soft);color:#1e40af;}
+.pill.green{background:var(--green-soft);color:#166534;}
+.pill.amber{background:var(--amber-soft);color:#92400e;}
+.pill.red{background:var(--red-soft);color:#991b1b;}
+.pill.gray{background:var(--gray-soft);color:var(--text-2);}
+.hidden{display:none !important;}
+.toast{position:fixed;bottom:26px;right:26px;padding:16px 26px;background:#fff;border-left:5px solid var(--blue);border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 12px 45px rgba(15,41,66,.25);z-index:9999;display:none;color:var(--navy);}
+.toast.show{display:block;animation:slideIn .3s;}
+.toast.success{border-left-color:var(--green);}
+.toast.error{border-left-color:var(--red);}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.opt-btn{padding:9px 16px;background:#fff;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text-2);transition:.15s;font-family:inherit;}
+.opt-btn:hover{border-color:var(--navy-3);color:var(--navy);background:var(--gray-soft);}
+.opt-btn.selected{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 12px rgba(15,41,66,.2);}
+.opt-btn.selected::before{content:"✓ ";}
+.opt-wrap{display:flex;flex-wrap:wrap;gap:10px;}
+.opt-detail{background:var(--gray-soft);border-radius:12px;padding:18px;margin-top:14px;border:1px solid var(--border-2);}
+.opt-detail h4{font-size:14px;color:var(--navy);margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px;}
+.machine-btn{padding:5px 10px;background:#fff;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-2);transition:.15s;margin:1px;font-family:inherit;white-space:nowrap;}
+.machine-btn:hover{border-color:var(--navy-3);}
+.machine-btn.selected{background:var(--navy);color:#fff;border-color:var(--navy);}
+.machine-cell{display:flex;flex-direction:column;gap:4px;}
+.machine-cell .chosen{font-size:12px;color:var(--navy);font-weight:700;}
+.chart-wrap{position:relative;height:340px;}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:20px;}
+.dash-card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:20px;border-left:5px solid var(--navy);}
+.dash-card h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;font-weight:700;}
+.dash-card .big{font-size:28px;font-weight:800;color:var(--navy);line-height:1.1;}
+.dash-card .sub{font-size:13px;color:var(--text-2);margin-top:6px;}
+.dash-card.green{border-left-color:var(--green);}
+.dash-card.amber{border-left-color:var(--amber);}
+.dash-card.blue{border-left-color:var(--blue);}
+.dash-card.red{border-left-color:var(--red);}
+.battery-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.battery-panels{grid-template-columns:1fr;}}
+.battery-panel{background:#fff;border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border);}
+.battery-panel-head{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;padding:14px 20px;font-size:15px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.battery-panel-body{padding:18px;}
+.subtabs{display:flex;gap:8px;border-bottom:2px solid var(--border-2);margin-bottom:18px;flex-wrap:wrap;}
+.subtab{padding:11px 20px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;transition:.15s;}
+.subtab:hover{color:var(--navy);}
+.subtab.active{color:var(--navy);border-bottom-color:var(--navy);}
+.vp-bar{background:var(--gray-soft);padding:14px 18px;border-radius:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+.vp-bar>div{min-width:140px;}
+.row-card{background:var(--gray-soft);border:1px solid var(--border-2);border-radius:10px;padding:12px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="sail-logo">
+      <img src="sail-logo.png" alt="SAIL Logo" />
+      <div class="hindi">सेल</div>
+      <div class="sail">SAIL</div>
+    </div>
+    <h1>Bhilai Steel Plant</h1>
+    <div class="sub2">CO&CCD</div>
+    <p class="sub">Coke Oven Battery Management System</p>
+    <div id="authMsg"></div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabSignin" onclick="showSignin()">Sign In</div>
+      <div class="auth-tab" id="tabSignup" onclick="showSignup()">Sign Up</div>
+    </div>
+    <div id="signinForm">
+      <label class="lbl">EMAIL</label><input type="email" id="si-email" placeholder="you@example.com" style="margin-bottom:16px;" />
+      <label class="lbl">PASSWORD</label><input type="password" id="si-password" placeholder="••••••••" />
+      <div style="text-align:right;font-size:13px;color:var(--navy-3);cursor:pointer;margin-bottom:18px;font-weight:600;">Forgot password?</div>
+      <button class="full" onclick="doSignIn()">🔒 Sign In</button>
+    </div>
+    <div id="signupForm" class="hidden">
+      <label class="lbl">NAME</label><input id="su-name" style="margin-bottom:14px;" />
+      <label class="lbl">DESIGNATION</label><input id="su-designation" style="margin-bottom:14px;" />
+      <label class="lbl">BSP PHONE NUMBER</label><input id="su-phone" placeholder="e.g. 98765 43210" style="margin-bottom:14px;" />
+      <label class="lbl">VALID EMAIL</label><input type="email" id="su-email" style="margin-bottom:14px;" />
+      <label class="lbl">PASSWORD</label><input type="password" id="su-password" style="margin-bottom:14px;" />
+      <label class="lbl">ROLE</label>
+      <select id="su-role" style="margin-bottom:20px;">
+        <option value="">-- select --</option>
+        <option value="shift_incharge">Shift Incharge</option>
+        <option value="hr">HR</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="full" onclick="doSignUp()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="pendingScreen" class="auth-wrap hidden">
+  <div class="auth-card" style="text-align:center;">
+    <div class="sail-logo">
+      <img src="sail-logo.png" alt="SAIL Logo" />
+      <div class="hindi">सेल</div>
+      <div class="sail">SAIL</div>
+    </div>
+    <h1>⏳ Pending Approval</h1>
+    <p style="color:var(--text-2);margin:20px 0 24px;font-size:15px;line-height:1.6;">Your account is awaiting admin approval.<br>Please contact the CO&CCD admin.</p>
+    <button class="full secondary" onclick="doSignOut()">Sign Out</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <img src="sail-logo.png" alt="SAIL Logo" />
+        <div class="text"><h1>CO&CCD · Coke Oven Battery Management</h1><p>Bhilai Steel Plant · SAIL · COB 9-10</p></div>
+      </div>
+      <div class="user-block">
+        <div class="avatar" id="userAvatar">—</div>
+        <div class="info"><div class="n" id="userName">—</div><div class="r" id="userMeta">—</div></div>
+        <button class="small secondary" onclick="doSignOut()" style="color:#fff;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);">Logout</button>
+      </div>
+    </div>
+    <div class="tabs-bar" id="tabsBar"></div>
+    <div id="pageContent"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ================ MASTER DATA ================
+const MASTER = {
+  PUSHER_CARS: ["CP 9-0","CP 9-1","CP 9-2","CP 10-3"],
+  CHARGING_CARS: ["CC 9-1","CC 9-2","CC 10-3","CC 10-4"],
+  DOOR_EXTRACTORS: ["DE 9-1","DE 9-2","DE 10-3","DE 10-4"],
+  QUENCHING_CARS: ["QC 9 inner","QC 9 outer","QC 10 inner","QC 10 outer"],
+  TRACKS_WHARFS: ["Wharf 5","Wharf 6","1st Track","2nd Track"],
+  SHIFTS: ["A","B","C"],
+  BATTERIES: ["9","10"],
+  BLAST_FURNACES: ["BF-4","BF-6","BF-7","BF-8"],
+  OVEN_JOBS: ["Door Change","AFDF","Top Lintel","Bottom Lintel","Jamb Bricks","Door Frame","Armour Frame","Sole Brick","Stand Pipe","Valve Box","Hatch Cover","Hatch Ring","Goose Neck"],
+  RAIL_TRACKS: ["Pusher Track","Charging Car Track","Door Extractor Track","Quenching Car Track"],
+  PPM_HALVES: ["1st Half","2nd Half","Full Day"],
+  SHIFT_TIMES: {A:{start:6,end:14,label:"06:00 – 14:00"},B:{start:14,end:22,label:"14:00 – 22:00"},C:{start:22,end:6,label:"22:00 – 06:00"}},
+  CQ_PARAMS: [
+    {key:"moisture",label:"Moisture (%)",color:"#3b82f6"},
+    {key:"csr",label:"CSR",color:"#16a34a"},
+    {key:"cri",label:"CRI",color:"#dc2626"},
+    {key:"m10",label:"M10",color:"#f59e0b"},
+    {key:"m40",label:"M40",color:"#0f2942"},
+  ],
+  DEFAULT_COALS: ["PCC","MCC","AUS (H)","USA (H)","BENGA (H)","LVHR","MLV","MABU","AUS (S)","USA (S)","RUSSIA (S)"],
+  JOB_SIDES: {
+    "Door Change":["Pusher Side","Coke Side"],"AFDF":["Pusher Side","Coke Side"],
+    "Top Lintel":["Pusher Side","Coke Side"],"Bottom Lintel":["Pusher Side","Coke Side"],
+    "Jamb Bricks":["Pusher Side","Coke Side"],"Door Frame":["Pusher Side","Coke Side"],
+    "Armour Frame":["Pusher Side","Coke Side"],"Sole Brick":["Pusher Side","Coke Side"],
+    "Stand Pipe":["Pusher Side","Coke Side"],"Valve Box":["Pusher Side","Coke Side"],
+    "Hatch Cover":["Pusher Side","Middle Side","Coke Side"],
+    "Hatch Ring":["Pusher Side","Middle Side","Coke Side"],"Goose Neck":["Pusher Side","Coke Side"],
+  }
+};
+// Combined equipment list for Today's Plan (PPM + Wharfs + Tracks)
+MASTER.ALL_EQUIPMENT = [...MASTER.PUSHER_CARS, ...MASTER.CHARGING_CARS, ...MASTER.DOOR_EXTRACTORS, ...MASTER.QUENCHING_CARS, ...MASTER.TRACKS_WHARFS];
+
+// ================ OVEN SEQUENCE ================
+const SERIES = {
+  1:[1,6,11,16,21,26,31,36,41,46,51,56,61,66],
+  2:[3,8,13,18,23,28,33,38,43,48,53,58,63,67],
+  3:[5,10,15,20,25,30,35,40,45,50,55,60,65],
+  4:[2,7,12,17,22,27,32,37,42,47,52,57,62],
+  5:[4,9,14,19,24,29,34,39,44,49,54,59,64],
+};
+const SERIES_ORDER = [1,2,3,4,5];
+function relativeToPhysical(rel,b){ return b==="9" ? 900+rel : 1000+rel; }
+function physicalToRelative(p,b){ return b==="9" ? p-900 : p-1000; }
+function findSeriesPosition(rel){ for(const s of SERIES_ORDER){ const i=SERIES[s].indexOf(rel); if(i!==-1) return {series:s,indexInSeries:i}; } return null; }
+function generateSequence(startPos,count){
+  const out=[]; let sIdx=0,iIdx=0;
+  if(startPos){
+    sIdx=SERIES_ORDER.indexOf(startPos.series);
+    iIdx=startPos.indexInSeries+1;
+    if(iIdx>=SERIES[SERIES_ORDER[sIdx]].length){ iIdx=0; sIdx=(sIdx+1)%SERIES_ORDER.length; }
+  }
+  while(out.length<count){
+    const sn=SERIES_ORDER[sIdx], arr=SERIES[sn];
+    out.push({relative:arr[iIdx],series:sn,indexInSeries:iIdx});
+    iIdx++;
+    if(iIdx>=arr.length){ iIdx=0; sIdx=(sIdx+1)%SERIES_ORDER.length; }
+  }
+  return out;
+}
+function spreadTimes(startTime,count,shiftMin=480){
+  const [h,m]=startTime.split(":").map(Number);
+  const startMins=h*60+m, interval=shiftMin/count, times=[];
+  for(let i=0;i<count;i++){
+    const t=Math.round(startMins+i*interval);
+    times.push(`${String(Math.floor((t/60)%24)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`);
+  }
+  return times;
+}
+
+// ================ STATE ================
+const state = {
+  user:null, profile:null, page:"dashboard",
+  generatedOvens: [],
+  chartCQ:null, chartDashCQ:null, chartBF:null, chartBFQuality:null,
+  selectedInOvenJobs: [], selectedPPM: [],
+  logbookRows9: [], logbookRows10: [],
+  logbookLoaded9: false, logbookLoaded10: false,
+  dashCQParam:"moisture", dashBFSelection:"__all__",
+  extraOvens9: [], extraOvens10: [],
+  leftOvens9: {pushed:[],uncharged:[]}, leftOvens10: {pushed:[],uncharged:[]},
+  blendPlant: "CHP I",
+  scheduleEditId: null,
+  dashSchedView: {9:false,10:false},
+};
+
+// ================ HELPERS ================
+function toast(msg,type="info"){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.className="toast show "+type;
+  setTimeout(()=>el.classList.remove("show"),3000);
+}
+function showAuthMsg(m,t="error"){ document.getElementById("authMsg").innerHTML=`<div class="msg ${t}">${m}</div>`; }
+function esc(s){ return (s??"").toString().replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function yesterdayISO(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); }
+function last7Days(){ const a=[]; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); a.push(d.toISOString().slice(0,10)); } return a; }
+function nowHHMM(){ const d=new Date(); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function initials(n){ return (n||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
+function currentShift(){ const h=new Date().getHours(); if(h>=6&&h<14) return "A"; if(h>=14&&h<22) return "B"; return "C"; }
+function canEdit(tab){
+  const r=state.profile?.role; if(!r) return false; if(r==="admin") return true;
+  const map={logbook:["shift_incharge"],schedule:["hr"],quality:["hr"]};
+  return (map[tab]||[]).includes(r);
+}
+function canView(tab){
+  const r=state.profile?.role; if(!r) return false; if(r==="admin") return true;
+  if(r==="hr") return ["dashboard","schedule","quality"].includes(tab);
+  if(r==="shift_incharge") return ["dashboard","logbook"].includes(tab);
+  return false;
+}
+
+// ================ LOGO ================
+function getLogoAbsoluteURL(){
+  const base = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, "");
+  return base + "/sail-logo.png";
+}
+function getSailLogoSVG(){
+  return `<img src="${getLogoAbsoluteURL()}" style="width:80px;height:auto;" alt="SAIL Logo" />`;
+}
+
+// ================ PRINT HELPERS ================
+function printHeaderHTML(subtitle,period){
+  return `<div style="display:flex;align-items:center;gap:20px;border-bottom:4px double #0f2942;padding-bottom:16px;margin-bottom:20px;">
+    ${getSailLogoSVG()}
+    <div style="flex:1;">
+      <h1 style="font-size:20px;margin:0;color:#0f2942;">Bhilai Steel Plant · SAIL · CO&CCD</h1>
+      <p style="font-size:13px;color:#4b6076;margin:4px 0 0;">Coke Oven Battery Management System</p>
+      <p style="font-size:15px;font-weight:700;color:#0f2942;margin:6px 0 0;">${esc(subtitle)}</p>
+      <p style="font-size:12px;color:#7a8ea3;margin:2px 0 0;">Period: ${esc(period)}</p>
+    </div>
+  </div>`;
+}
+function printFooterHTML(){
+  return `<div style="margin-top:30px;font-size:10px;color:#7a8ea3;text-align:right;border-top:1px solid #d1dae5;padding-top:10px;">Printed by ${esc(state.profile.name)} on ${new Date().toLocaleString()}</div>`;
+}
+function printStyles(){
+  return `<style>
+    body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#0f2942;font-size:12px;}
+    h1{font-size:20px;margin:0;color:#0f2942;}
+    table{width:100%;border-collapse:collapse;margin:12px 0 20px;}
+    th,td{border:1px solid #d1dae5;padding:8px 10px;text-align:left;font-size:11px;vertical-align:top;}
+    th{background:#f1f5f9;font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+    .section-title{background:#0f2942;color:#fff;padding:8px 12px;font-size:13px;font-weight:700;margin:20px 0 10px;border-radius:6px;}
+    .blk{page-break-inside:avoid;margin-bottom:26px;border:1px solid #d1dae5;padding:16px;border-radius:8px;}
+    .blk-head{font-size:12px;font-weight:700;color:#0f2942;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #e5ecf3;}
+    .kv-table tr td:first-child{background:#f8fafc;font-weight:600;width:35%;}
+    .stamp{margin-top:30px;font-size:10px;color:#7a8ea3;text-align:right;border-top:1px solid #d1dae5;padding-top:10px;}
+  </style>`;
+}
+
+// ================ AUTH ================
+function showSignup(){ document.getElementById("signinForm").classList.add("hidden"); document.getElementById("signupForm").classList.remove("hidden"); document.getElementById("tabSignin").classList.remove("active"); document.getElementById("tabSignup").classList.add("active"); document.getElementById("authMsg").innerHTML=""; }
+function showSignin(){ document.getElementById("signupForm").classList.add("hidden"); document.getElementById("signinForm").classList.remove("hidden"); document.getElementById("tabSignup").classList.remove("active"); document.getElementById("tabSignin").classList.add("active"); document.getElementById("authMsg").innerHTML=""; }
+async function doSignUp(){
+  const name=document.getElementById("su-name").value.trim();
+  const designation=document.getElementById("su-designation").value.trim();
+  const phone=document.getElementById("su-phone").value.trim();
+  const email=document.getElementById("su-email").value.trim();
+  const password=document.getElementById("su-password").value;
+  const role=document.getElementById("su-role").value;
+  if(!name||!email||!password||!role||!phone) return showAuthMsg("Please fill all fields including phone number.");
+  if(password.length<6) return showAuthMsg("Password must be at least 6 characters.");
+  try{
+    const cred=await FB.createUserWithEmailAndPassword(FB.auth,email,password);
+    await FB.setDoc(FB.doc(FB.db,"users",cred.user.uid),{ name,designation,phone,email,role,status:"pending",createdAt:FB.serverTimestamp(),approvedBy:null,approvedAt:null });
+    showAuthMsg("Account created. Awaiting admin approval.","success");
+    setTimeout(()=>doSignOut(),2500);
+  }catch(e){ showAuthMsg(e.message); }
+}
+async function doSignIn(){
+  const email=document.getElementById("si-email").value.trim();
+  const password=document.getElementById("si-password").value;
+  if(!email||!password) return showAuthMsg("Enter email and password.");
+  try{ await FB.signInWithEmailAndPassword(FB.auth,email,password); }
+  catch(e){ showAuthMsg(e.message); }
+}
+async function doSignOut(){ await FB.signOut(FB.auth); location.reload(); }
+
+function initAuthListener(){
+  FB.onAuthStateChanged(FB.auth, async (user)=>{
+    if(!user){ document.getElementById("authScreen").classList.remove("hidden"); document.getElementById("pendingScreen").classList.add("hidden"); document.getElementById("app").style.display="none"; return; }
+    const snap=await FB.getDoc(FB.doc(FB.db,"users",user.uid));
+    if(!snap.exists()){ document.getElementById("authScreen").classList.add("hidden"); document.getElementById("pendingScreen").classList.remove("hidden"); return; }
+    const profile=snap.data();
+    state.user={uid:user.uid,email:user.email}; state.profile=profile;
+    if(profile.status!=="approved"){ document.getElementById("authScreen").classList.add("hidden"); document.getElementById("pendingScreen").classList.remove("hidden"); document.getElementById("app").style.display="none"; return; }
+    document.getElementById("authScreen").classList.add("hidden");
+    document.getElementById("pendingScreen").classList.add("hidden");
+    document.getElementById("app").style.display="block";
+    document.getElementById("userName").textContent=profile.name;
+    document.getElementById("userMeta").textContent=profile.designation+" · "+profile.role.replace("_"," ");
+    document.getElementById("userAvatar").textContent=initials(profile.name);
+    renderTabsBar();
+    nav("dashboard");
+  });
+}
+
+// ================ TABS ================
+function renderTabsBar(){
+  const r=state.profile.role;
+  const tabs=[
+    {id:"dashboard",label:"🏠 Dashboard",show:true},
+    {id:"logbook",label:"📓 Log Book",show:r==="admin"||r==="shift_incharge"},
+    {id:"schedule",label:"🔥 Schedule",show:r==="admin"||r==="hr"},
+    {id:"ovenjob",label:"🧱 Oven Job",show:r==="admin"},
+    {id:"dailyplan",label:"📋 Todays Plan",show:r==="admin"},
+    {id:"qcdetails",label:"🚃 QC Details",show:r==="admin"},
+    {id:"blend",label:"🪨 Coal Blend",show:r==="admin"},
+    {id:"quality",label:"🧪 Production & Quality",show:r==="admin"||r==="hr"},
+    {id:"environment",label:"🌫️ Environment",show:r==="admin"},
+    {id:"rail",label:"🛤️ Rail",show:r==="admin"},
+    {id:"users",label:"👥 Users",show:r==="admin"},
+  ];
+  document.getElementById("tabsBar").innerHTML = tabs.filter(t=>t.show).map(t=>`<div class="tab-item ${state.page===t.id?"active":""}" data-page="${t.id}" onclick="nav('${t.id}')">${t.label}</div>`).join("");
+}
+
+// ================ NAVIGATION ================
+function nav(page){
+  if(!canView(page)&&page!=="dashboard"){ toast("You don't have access to this tab","error"); return; }
+  state.page=page;
+  document.querySelectorAll(".tab-item").forEach(n=>n.classList.remove("active"));
+  const a=document.querySelector(`.tab-item[data-page="${page}"]`); if(a) a.classList.add("active");
+  const renderers={
+    dashboard:renderDashboard,logbook:renderLogbook,schedule:renderSchedule,
+    ovenjob:renderOvenJob,dailyplan:renderDailyPlan,qcdetails:renderQCDetails,
+    blend:renderBlend,quality:renderQuality,environment:renderEnvironment,
+    rail:renderRail,users:renderUsers
+  };
+  (renderers[page]||renderDashboard)();
+}
+
+// ================ DASHBOARD ================
+async function renderDashboard(){
+  const p=state.profile;
+  document.getElementById("pageContent").innerHTML=`
+    <div class="dash-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));">
+      <div class="dash-card blue">
+        <h3>Current Shift</h3>
+        <div class="big" id="dashShift">—</div>
+        <div class="sub" id="dashShiftTime">—</div>
+        <div class="sub" id="dashShiftIncharge" style="margin-top:8px;color:var(--navy);font-weight:700;">—</div>
+      </div>
+      <div class="dash-card green">
+        <h3>Battery 9 · Pushed / Scheduled</h3>
+        <div class="big" id="dashB9PS">—</div>
+        <div class="sub">Current shift progress</div>
+      </div>
+      <div class="dash-card amber">
+        <h3>Battery 10 · Pushed / Scheduled</h3>
+        <div class="big" id="dashB10PS">—</div>
+        <div class="sub">Current shift progress</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>📋 Today's Plan</h2><div class="tag">Visible to all users</div></div>
+      <div class="card-body" id="dashDailyPlan"><div style="color:var(--muted);">Loading…</div></div>
+    </div>
+    <div class="battery-panels">
+      <div class="battery-panel">
+        <div class="battery-panel-head"><span>🔋 Battery 9 · Yesterday</span><button class="small secondary" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);" onclick="toggleDashSched('9')" id="dashToggle9">📄 View</button></div>
+        <div class="battery-panel-body" id="dashPanel9"><div style="color:var(--muted);">Loading…</div></div>
+      </div>
+      <div class="battery-panel">
+        <div class="battery-panel-head"><span>🔋 Battery 10 · Yesterday</span><button class="small secondary" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);" onclick="toggleDashSched('10')" id="dashToggle10">📄 View</button></div>
+        <div class="battery-panel-body" id="dashPanel10"><div style="color:var(--muted);">Loading…</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:22px;">
+      <div class="card-head"><h2>🧪 Coke Quality Trend — Last 7 Days</h2><div class="tag">Default: Moisture</div></div>
+      <div class="card-body">
+        <div class="vp-bar"><div style="min-width:220px;"><label class="lbl">Parameter</label>
+          <select id="dashCQParam" onchange="state.dashCQParam=this.value; loadDashboardCokeQuality();">
+            ${MASTER.CQ_PARAMS.map(p=>`<option value="${p.key}" ${p.key==="moisture"?"selected":""}>${p.label}</option>`).join("")}
+          </select></div></div>
+        <div class="chart-wrap"><canvas id="dashCQChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>🔥 Blast Furnace Production Trend — Last 7 Days</h2><div class="tag">Default: All BFs</div></div>
+      <div class="card-body">
+        <div class="vp-bar"><div style="min-width:220px;"><label class="lbl">Blast Furnace</label>
+          <select id="dashBFSelect" onchange="state.dashBFSelection=this.value; loadDashboardBFTrend();">
+            <option value="__all__" selected>All Blast Furnaces</option>
+            ${MASTER.BLAST_FURNACES.map(bf=>`<option value="${bf}">${bf}</option>`).join("")}
+          </select></div></div>
+        <div class="chart-wrap"><canvas id="dashBFChart"></canvas></div>
+      </div>
+    </div>
+  `;
+  await loadDashboardShift();
+  await loadDashboardBatteryKPI();
+  await loadDashboardDailyPlan();
+  await renderBatteryPanel("9", yesterdayISO());
+  await renderBatteryPanel("10", yesterdayISO());
+  await loadDashboardCokeQuality();
+  await loadDashboardBFTrend();
+}
+
+async function loadDashboardShift(){
+  const shift=currentShift(), t=MASTER.SHIFT_TIMES[shift];
+  document.getElementById("dashShift").textContent="Shift "+shift;
+  document.getElementById("dashShiftTime").textContent=t.label;
+  try{
+    const today=todayISO();
+    const snap=await FB.getDocs(FB.collection(FB.db,"logbook"));
+    const entry=snap.docs.map(d=>d.data()).find(d=>d.shift_date===today&&d.shift===shift);
+    if(entry){
+      const phone=entry.inchargePhone||"";
+      const last4=phone?phone.slice(-4):"----";
+      document.getElementById("dashShiftIncharge").textContent=`Incharge: ${entry.inchargeName||"—"} (…${last4})`;
+    }else{
+      document.getElementById("dashShiftIncharge").textContent="Incharge: not yet entered";
+    }
+  }catch(e){}
+}
+
+async function loadDashboardBatteryKPI(){
+  const shift=currentShift(), today=todayISO();
+  for(const b of ["9","10"]){
+    try{
+      const schedSnap=await FB.getDocs(FB.collection(FB.db,"ovenSchedules"));
+      const sched=schedSnap.docs.map(d=>d.data()).find(d=>d.shift_date===today&&d.shift===shift&&d.battery===b);
+      const total=sched?(sched.ovens||[]).length:0;
+      const logSnap=await FB.getDocs(FB.collection(FB.db,"logbook"));
+      const log=logSnap.docs.map(d=>d.data()).find(d=>d.shift_date===today&&d.shift===shift&&d.battery===b);
+      const pushed=log?(log.ovensScheduled||[]).filter(o=>o.pushedBy).length:0;
+      document.getElementById(b==="9"?"dashB9PS":"dashB10PS").textContent=`${pushed} / ${total}`;
+    }catch(e){}
+  }
+}
+
+async function renderBatteryPanel(battery,date){
+  const el=document.getElementById(`dashPanel${battery}`);
+  if(!el) return;
+  try{
+    const schedSnap=await FB.getDocs(FB.collection(FB.db,"ovenSchedules"));
+    const batteryScheds=schedSnap.docs.map(d=>d.data()).filter(d=>d.shift_date===date&&d.battery===battery);
+    const logSnap=await FB.getDocs(FB.collection(FB.db,"logbook"));
+    const batteryLogs=logSnap.docs.map(d=>d.data()).filter(d=>d.shift_date===date&&d.battery===battery);
+    let totalSched=0, totalPushed=0;
+    batteryScheds.forEach(s=>{ totalSched+=(s.ovens||[]).length; });
+    batteryLogs.forEach(l=>{ totalPushed+=(l.ovensScheduled||[]).filter(o=>o.pushedBy).length; });
+    const pct=totalSched?Math.round((totalPushed/totalSched)*100):0;
+    const showSched=state.dashSchedView[battery];
+    el.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div><div style="font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:700;">Ovens Pushed</div>
+          <div style="font-size:28px;font-weight:800;color:var(--navy);">${totalPushed} <span style="font-size:16px;color:var(--muted);">/ ${totalSched}</span></div></div>
+        <div style="text-align:right;"><div style="font-size:12px;color:var(--muted);">Completion</div>
+          <div style="font-size:22px;font-weight:700;color:${pct>=80?"var(--green)":pct>=50?"var(--amber)":"var(--red)"};">${pct}%</div></div>
+      </div>
+      <div style="height:8px;background:var(--gray-soft);border-radius:6px;overflow:hidden;margin-bottom:12px;">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--blue),var(--navy));transition:.4s;"></div>
+      </div>
+      ${showSched?`
+        <div style="max-height:300px;overflow-y:auto;">
+          ${batteryScheds.length?batteryScheds.map(s=>`
+            <div style="margin-bottom:12px;">
+              <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;">Shift ${esc(s.shift)} · Min Coking: ${s.minCokingPeriod?.hours??0}h ${s.minCokingPeriod?.minutes??0}m</div>
+              <table style="font-size:12px;"><thead><tr><th>#</th><th>Oven</th><th>Time</th></tr></thead>
+                <tbody>${(s.ovens||[]).map((o,i)=>`<tr><td>${i+1}</td><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td></tr>`).join("")}</tbody>
+              </table>
+            </div>`).join(""):`<div style="color:var(--muted);font-size:13px;">No schedule for this day.</div>`}
+        </div>`:``}
+    `;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+function toggleDashSched(battery){
+  state.dashSchedView[battery]=!state.dashSchedView[battery];
+  const btn=document.getElementById(`dashToggle${battery}`);
+  if(btn) btn.textContent=state.dashSchedView[battery]?"✖ Close":"📄 View";
+  renderBatteryPanel(battery,yesterdayISO());
+}
+async function loadDashboardDailyPlan(){
+  const el=document.getElementById("dashDailyPlan");
+  try{
+    const snap=await FB.getDoc(FB.doc(FB.db,"dailyPlans",todayISO()));
+    if(!snap.exists()){ el.innerHTML=`<div style="color:var(--muted);">No plan for today yet.</div>`; return; }
+    const plan=snap.data();
+    el.innerHTML=`
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Entered by <b>${esc(plan.adminName||"—")}</b> (${esc(plan.adminDesignation||"—")})</p>
+      <div class="section-label" style="margin-top:0;">EQUIPMENT UNDER PPM / OPERATIONAL</div>
+      <div>${(plan.ppm||[]).map(x=>`<span class="pill blue">${esc(x.machine)} · ${esc(x.half)}</span>`).join(" ")||"<span style='color:var(--muted);'>None</span>"}</div>
+      <div class="section-label">OTHER JOBS</div>
+      <div style="color:var(--text-2);font-size:14px;">${esc(plan.otherJobs||"—")}</div>
+    `;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function loadDashboardCokeQuality(){
+  const canvas=document.getElementById("dashCQChart"); if(!canvas) return;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"cokeQuality"));
+    const allDocs=snap.docs.map(d=>d.data()).filter(d=>d.date);
+    const days=last7Days();
+    const docs=days.map(dt=>allDocs.find(d=>d.date===dt)).filter(Boolean);
+    const labels=docs.map(d=>d.date);
+    const p=MASTER.CQ_PARAMS.find(x=>x.key===state.dashCQParam)||MASTER.CQ_PARAMS[0];
+    const datasets=[{label:p.label,data:docs.map(d=>Number(d[p.key]||0)),borderColor:p.color,backgroundColor:p.color+"22",tension:.3,fill:true,pointRadius:5,pointBackgroundColor:p.color}];
+    if(state.chartDashCQ) state.chartDashCQ.destroy();
+    state.chartDashCQ=new Chart(canvas.getContext("2d"),{type:"line",data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:12}}}},scales:{x:{grid:{display:false}},y:{grid:{color:"#e5ecf3"}}}}});
+  }catch(e){ console.warn(e); }
+}
+async function loadDashboardBFTrend(){
+  const canvas=document.getElementById("dashBFChart"); if(!canvas) return;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"bfProduction"));
+    const allDocs=snap.docs.map(d=>d.data()).filter(d=>d.date);
+    const days=last7Days();
+    const colors={"BF-4":"#3b82f6","BF-6":"#16a34a","BF-7":"#dc2626","BF-8":"#f59e0b"};
+    let datasets;
+    if(state.dashBFSelection==="__all__"){
+      datasets=MASTER.BLAST_FURNACES.map(bf=>({label:bf,data:days.map(dt=>{const f=allDocs.find(x=>x.date===dt&&x.bf===bf);return f?Number(f.hotMetal||0):0;}),borderColor:colors[bf],tension:.3,pointRadius:4}));
+    }else{
+      const bf=state.dashBFSelection;
+      datasets=[{label:bf,data:days.map(dt=>{const f=allDocs.find(x=>x.date===dt&&x.bf===bf);return f?Number(f.hotMetal||0):0;}),borderColor:colors[bf]||"#0f2942",backgroundColor:(colors[bf]||"#0f2942")+"22",tension:.3,fill:true,pointRadius:5}];
+    }
+    if(state.chartBF) state.chartBF.destroy();
+    state.chartBF=new Chart(canvas.getContext("2d"),{type:"line",data:{labels:days,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:12}}}},scales:{x:{grid:{display:false}},y:{grid:{color:"#e5ecf3"}}}}});
+  }catch(e){ console.warn(e); }
+}
+
+// ================ TAB: LOGBOOK ================
+async function renderLogbook(){
+  const edit=canEdit("logbook");
+  state.logbookRows9=[]; state.logbookRows10=[]; state.logbookLoaded9=false; state.logbookLoaded10=false;
+  state.extraOvens9=[]; state.extraOvens10=[];
+  state.leftOvens9={pushed:[],uncharged:[]}; state.leftOvens10={pushed:[],uncharged:[]};
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>📓 Log Book Entry</h2><div class="tag">${edit?"Shift Incharge · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        ${!edit?`<div class="msg info">Read-only view.</div>`:""}
+        <div class="grid grid-3">
+          <div><label class="lbl">DATE</label><input type="date" id="lb-date" value="${todayISO()}" onchange="loadExistingLogbook()" /></div>
+          <div><label class="lbl">SHIFT</label><select id="lb-shift" onchange="loadExistingLogbook()">${MASTER.SHIFTS.map(s=>`<option>${s}</option>`).join("")}</select></div>
+          <div><label class="lbl">BSP PHONE NUMBER</label><input id="lb-phone" value="${esc(state.profile.phone||"")}" placeholder="Phone" /></div>
+        </div>
+        <div class="grid grid-2" style="margin-top:14px;">
+          <div><label class="lbl">SHIFT INCHARGE NAME</label><input id="lb-incharge" value="${esc(state.profile.name)}" /></div>
+          <div><label class="lbl">DESIGNATION</label><input id="lb-incharge-desig" value="${esc(state.profile.designation)}" /></div>
+        </div>
+        <div class="section-label">1 · MANPOWER</div>
+        <div class="grid grid-3">
+          <div><label class="lbl">BSP</label><input type="number" id="lb-bsp" value="0" /></div>
+          <div><label class="lbl">HOT JOB</label><input type="number" id="lb-hotjob" value="0" /></div>
+          <div><label class="lbl">PRIVATE OPERATORS</label><input type="number" id="lb-pvt" value="0" /></div>
+        </div>
+        <div class="section-label">2 · POCKET POSITION AT SHIFT START (INTEGER METERS)</div>
+        <div class="grid grid-2">
+          <div><label class="lbl">COAL TOWER 5</label><div class="grid grid-4">
+            <input type="number" step="1" id="lb-ct5-p1" placeholder="P1" /><input type="number" step="1" id="lb-ct5-p2" placeholder="P2" />
+            <input type="number" step="1" id="lb-ct5-p3" placeholder="P3" /><input type="number" step="1" id="lb-ct5-p4" placeholder="P4" /></div></div>
+          <div><label class="lbl">COAL TOWER 6</label><div class="grid grid-4">
+            <input type="number" step="1" id="lb-ct6-p1" placeholder="P1" /><input type="number" step="1" id="lb-ct6-p2" placeholder="P2" />
+            <input type="number" step="1" id="lb-ct6-p3" placeholder="P3" /><input type="number" step="1" id="lb-ct6-p4" placeholder="P4" /></div></div>
+        </div>
+        <div class="section-label">3 · EQUIPMENT AC POSITION</div>
+        <textarea id="lb-ac" placeholder="Enter AC details..." ${!edit?"disabled":""}></textarea>
+        <div class="section-label">4 · OVENS IN SCHEDULE — BOTH BATTERIES SIDE BY SIDE</div>
+        <div class="msg info">Load schedules to show both batteries side-by-side.</div>
+        <div class="row" style="margin-bottom:12px;"><button class="secondary small" onclick="loadLogbookSchedules()">🔄 Load Schedules</button></div>
+        <div class="battery-panels" style="margin-bottom:18px;">
+          <div class="battery-panel"><div class="battery-panel-head">🔋 Battery 9 Schedule</div>
+            <div class="battery-panel-body" id="lbSched9" style="max-height:450px;overflow-y:auto;"><div style="color:var(--muted);font-size:13px;">Click Load Schedules</div></div></div>
+          <div class="battery-panel"><div class="battery-panel-head">🔋 Battery 10 Schedule</div>
+            <div class="battery-panel-body" id="lbSched10" style="max-height:450px;overflow-y:auto;"><div style="color:var(--muted);font-size:13px;">Click Load Schedules</div></div></div>
+        </div>
+        <div class="section-label">5 · EXTRA OVENS PUSHED (FROM NEXT SHIFT) — BOTH BATTERIES</div>
+        <div class="battery-panels" style="margin-bottom:18px;">
+          <div class="battery-panel"><div class="battery-panel-head">🔋 Battery 9</div>
+            <div class="battery-panel-body"><div id="lbExtra9"></div>
+            <button class="secondary small" style="margin-top:8px;" onclick="addExtraOven('9')">+ Add Extra Oven</button></div></div>
+          <div class="battery-panel"><div class="battery-panel-head">🔋 Battery 10</div>
+            <div class="battery-panel-body"><div id="lbExtra10"></div>
+            <button class="secondary small" style="margin-top:8px;" onclick="addExtraOven('10')">+ Add Extra Oven</button></div></div>
+        </div>
+        <div class="section-label">6 · OVENS LEFT — BOTH BATTERIES</div>
+        <div class="battery-panels" style="margin-bottom:18px;">
+          <div class="battery-panel"><div class="battery-panel-head">🔋 Battery 9</div>
+            <div class="battery-panel-body">
+              <label class="lbl">LEFT TO BE PUSHED</label><div id="lbLeft9Pushed"></div>
+              <button class="secondary small" style="margin-top:6px;" onclick="addLeftOven('9','pushed')">+ Add</button>
+              <label class="lbl" style="margin-top:14px;">LEFT UNCHARGED</label><div id="lbLeft9Uncharged"></div>
+              <button class="secondary small" style="margin-top:6px;" onclick="addLeftOven('9','uncharged')">+ Add</button></div></div>
+          <div class="battery-panel"><div class="battery-panel-head">🔋 Battery 10</div>
+            <div class="battery-panel-body">
+              <label class="lbl">LEFT TO BE PUSHED</label><div id="lbLeft10Pushed"></div>
+              <button class="secondary small" style="margin-top:6px;" onclick="addLeftOven('10','pushed')">+ Add</button>
+              <label class="lbl" style="margin-top:14px;">LEFT UNCHARGED</label><div id="lbLeft10Uncharged"></div>
+              <button class="secondary small" style="margin-top:6px;" onclick="addLeftOven('10','uncharged')">+ Add</button></div></div>
+        </div>
+        <div class="section-label">7 · BREAKDOWN DETAILS</div>
+        <div id="breakdownList"></div>
+        ${edit?`<button class="secondary small" style="margin-top:10px;" onclick="addBreakdownRow()">+ Add Breakdown</button>`:""}
+        <div class="section-label">8 · WHARF RUNNING TIME (HH:MM)</div>
+        <div class="grid grid-2">
+          <div><label class="lbl">WHARF 5</label><input id="lb-wharf5" placeholder="HH:MM" /></div>
+          <div><label class="lbl">WHARF 6</label><input id="lb-wharf6" placeholder="HH:MM" /></div>
+        </div>
+        <div class="section-label">9 · POCKET POSITION AT SHIFT END (INTEGER METERS)</div>
+        <div class="grid grid-2">
+          <div><label class="lbl">COAL TOWER 5</label><div class="grid grid-4">
+            <input type="number" step="1" id="lb-ct5e-p1" placeholder="P1" /><input type="number" step="1" id="lb-ct5e-p2" placeholder="P2" />
+            <input type="number" step="1" id="lb-ct5e-p3" placeholder="P3" /><input type="number" step="1" id="lb-ct5e-p4" placeholder="P4" /></div></div>
+          <div><label class="lbl">COAL TOWER 6</label><div class="grid grid-4">
+            <input type="number" step="1" id="lb-ct6e-p1" placeholder="P1" /><input type="number" step="1" id="lb-ct6e-p2" placeholder="P2" />
+            <input type="number" step="1" id="lb-ct6e-p3" placeholder="P3" /><input type="number" step="1" id="lb-ct6e-p4" placeholder="P4" /></div></div>
+        </div>
+        ${edit?`<div class="row-end">
+          <button class="secondary" onclick="saveLogbook('save')">💾 Save (in-progress)</button>
+          <button class="success" onclick="saveLogbook('submit')">✅ Submit (final)</button>
+        </div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW LOGBOOK (submitted only)</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="lbv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="lbv-to" value="${todayISO()}" /></div>
+          <div><label class="lbl">SHIFT</label><select id="lbv-shift"><option value="">All</option>${MASTER.SHIFTS.map(s=>`<option>${s}</option>`).join("")}</select></div>
+          <div><button class="secondary" onclick="viewLogbook()">🔍 View</button></div>
+          <div><button onclick="printLogbook()">🖨️ Print</button></div>
+        </div>
+        <div id="lbv-results"></div>
+      </div>
+    </div>
+  `;
+  if(edit) addBreakdownRow();
+  renderExtraOvens("9"); renderExtraOvens("10");
+  renderLeftOvens("9"); renderLeftOvens("10");
+  await loadExistingLogbook();
+}
+
+async function loadExistingLogbook(){
+  const date=document.getElementById("lb-date").value;
+  const shift=document.getElementById("lb-shift").value;
+  state.logbookRows9=[]; state.logbookRows10=[];
+  state.logbookLoaded9=false; state.logbookLoaded10=false;
+  state.extraOvens9=[]; state.extraOvens10=[];
+  state.leftOvens9={pushed:[],uncharged:[]}; state.leftOvens10={pushed:[],uncharged:[]};
+  document.getElementById("lbSched9").innerHTML=`<div style="color:var(--muted);font-size:13px;">Click Load Schedules</div>`;
+  document.getElementById("lbSched10").innerHTML=`<div style="color:var(--muted);font-size:13px;">Click Load Schedules</div>`;
+  renderExtraOvens("9"); renderExtraOvens("10");
+  renderLeftOvens("9"); renderLeftOvens("10");
+  try{
+    const id9=`${date}_${shift}_9`, id10=`${date}_${shift}_10`;
+    const [s9,s10]=await Promise.all([FB.getDoc(FB.doc(FB.db,"logbook",id9)),FB.getDoc(FB.doc(FB.db,"logbook",id10))]);
+    const d9=s9.exists()?s9.data():null, d10=s10.exists()?s10.data():null;
+    if(!d9&&!d10){ toast("No existing entry for this date/shift — you can create new","info"); return; }
+    const primary=d9||d10;
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v!==undefined&&v!==null) el.value=v; };
+    set("lb-phone",primary.inchargePhone); set("lb-incharge",primary.inchargeName); set("lb-incharge-desig",primary.inchargeDesignation);
+    set("lb-bsp",primary.manpower?.bsp); set("lb-hotjob",primary.manpower?.hotJob); set("lb-pvt",primary.manpower?.privateOperators);
+    ["p1","p2","p3","p4"].forEach(k=>{
+      set("lb-ct5-"+k,primary.pocketStart?.ct5?.[k]); set("lb-ct6-"+k,primary.pocketStart?.ct6?.[k]);
+      set("lb-ct5e-"+k,primary.pocketEnd?.ct5?.[k]); set("lb-ct6e-"+k,primary.pocketEnd?.ct6?.[k]);
+    });
+    set("lb-ac",primary.equipmentAC);
+    set("lb-wharf5",primary.wharf?.wharf5); set("lb-wharf6",primary.wharf?.wharf6);
+    if(d9){
+      state.logbookRows9=d9.ovensScheduled||[];
+      state.logbookLoaded9=state.logbookRows9.length>0;
+      state.extraOvens9=d9.extraOvens||[];
+      state.leftOvens9={pushed:d9.ovensLeftPushed||[],uncharged:d9.ovensLeftUncharged||[]};
+    }
+    if(d10){
+      state.logbookRows10=d10.ovensScheduled||[];
+      state.logbookLoaded10=state.logbookRows10.length>0;
+      state.extraOvens10=d10.extraOvens||[];
+      state.leftOvens10={pushed:d10.ovensLeftPushed||[],uncharged:d10.ovensLeftUncharged||[]};
+    }
+    renderExtraOvens("9"); renderExtraOvens("10");
+    renderLeftOvens("9"); renderLeftOvens("10");
+    if(state.logbookLoaded9) renderLogbookSchedRows("9");
+    if(state.logbookLoaded10) renderLogbookSchedRows("10");
+    toast(`Loaded existing entry for ${date} shift ${shift}`,"success");
+  }catch(e){ console.warn(e); }
+}
+
+function renderExtraOvens(battery){
+  const el=document.getElementById(`lbExtra${battery}`); if(!el) return;
+  const list=battery==="9"?state.extraOvens9:state.extraOvens10;
+  if(!list.length){ el.innerHTML=`<div style="color:var(--muted);font-size:13px;">No extra ovens.</div>`; return; }
+  const machines={pushed:MASTER.PUSHER_CARS,door:MASTER.DOOR_EXTRACTORS,charged:MASTER.CHARGING_CARS};
+  el.innerHTML=list.map((o,i)=>`
+    <div class="row-card">
+      <div class="grid grid-4" style="gap:6px;margin-bottom:6px;">
+        <input type="number" placeholder="Oven No" value="${esc(o.ovenNo||"")}" oninput="setExtra('${battery}',${i},'ovenNo',this.value)" />
+        <input type="time" value="${esc(o.pushTime||"")}" oninput="setExtra('${battery}',${i},'pushTime',this.value)" />
+        <input type="number" step="0.1" placeholder="Amperage" value="${esc(o.amperage||"")}" oninput="setExtra('${battery}',${i},'amperage',this.value)" />
+        <button class="small danger" onclick="removeExtraOven('${battery}',${i})">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Pushed By:</div>
+      <div class="machine-cell" style="margin-bottom:6px;">
+        ${machines.pushed.map(m=>`<button class="machine-btn ${o.pushedBy===m?"selected":""}" onclick="setExtra('${battery}',${i},'pushedBy','${esc(m)}')">${esc(m)}</button>`).join("")}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Door Extracted By:</div>
+      <div class="machine-cell" style="margin-bottom:6px;">
+        ${machines.door.map(m=>`<button class="machine-btn ${o.doorExtractedBy===m?"selected":""}" onclick="setExtra('${battery}',${i},'doorExtractedBy','${esc(m)}')">${esc(m)}</button>`).join("")}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Charged By:</div>
+      <div class="machine-cell">
+        ${machines.charged.map(m=>`<button class="machine-btn ${o.chargedBy===m?"selected":""}" onclick="setExtra('${battery}',${i},'chargedBy','${esc(m)}')">${esc(m)}</button>`).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+function setExtra(battery,i,key,val){
+  const list=battery==="9"?state.extraOvens9:state.extraOvens10;
+  if(!list[i]) return;
+  list[i][key]=val;
+  if(key!=="ovenNo"&&key!=="pushTime"&&key!=="amperage") renderExtraOvens(battery);
+}
+function addExtraOven(battery){
+  const list=battery==="9"?state.extraOvens9:state.extraOvens10;
+  list.push({ovenNo:"",pushTime:nowHHMM(),amperage:"",pushedBy:"",doorExtractedBy:"",chargedBy:""});
+  renderExtraOvens(battery);
+}
+function removeExtraOven(battery,i){
+  const list=battery==="9"?state.extraOvens9:state.extraOvens10;
+  list.splice(i,1); renderExtraOvens(battery);
+}
+
+function renderLeftOvens(battery){
+  const stateObj=battery==="9"?state.leftOvens9:state.leftOvens10;
+  ["pushed","uncharged"].forEach(kind=>{
+    const el=document.getElementById(`lbLeft${battery}${kind==="pushed"?"Pushed":"Uncharged"}`);
+    if(!el) return;
+    const list=stateObj[kind];
+    if(!list.length){ el.innerHTML=`<div style="color:var(--muted);font-size:13px;">None</div>`; return; }
+    el.innerHTML=list.map((o,i)=>`
+      <div class="row" style="gap:6px;margin-bottom:6px;">
+        <input type="number" placeholder="Oven No" value="${esc(o||"")}" oninput="setLeft('${battery}','${kind}',${i},this.value)" />
+        <button class="small danger" onclick="removeLeftOven('${battery}','${kind}',${i})">✕</button>
+      </div>
+    `).join("");
+  });
+}
+function setLeft(battery,kind,i,val){
+  const stateObj=battery==="9"?state.leftOvens9:state.leftOvens10;
+  stateObj[kind][i]=val;
+}
+function addLeftOven(battery,kind){
+  const stateObj=battery==="9"?state.leftOvens9:state.leftOvens10;
+  stateObj[kind].push(""); renderLeftOvens(battery);
+}
+function removeLeftOven(battery,kind,i){
+  const stateObj=battery==="9"?state.leftOvens9:state.leftOvens10;
+  stateObj[kind].splice(i,1); renderLeftOvens(battery);
+}
+
+async function loadLogbookSchedules(){
+  const date=document.getElementById("lb-date").value;
+  const shift=document.getElementById("lb-shift").value;
+  try{
+    for(const battery of ["9","10"]){
+      const q=FB.query(FB.collection(FB.db,"ovenSchedules"),FB.where("shift_date","==",date),FB.where("shift","==",shift),FB.where("battery","==",battery));
+      const snap=await FB.getDocs(q);
+      if(snap.empty){
+        document.getElementById(`lbSched${battery}`).innerHTML=`<div style="color:var(--muted);font-size:13px;">No schedule for Battery ${battery}.</div>`;
+        continue;
+      }
+      const data=snap.docs[0].data();
+      const rows=data.ovens.map(o=>({ovenNo:o.ovenNo,pushTime:o.pushTime,isManual:!!o.isManual,pushedBy:"",doorExtractedBy:"",chargedBy:"",amperage:""}));
+      if(battery==="9"){ state.logbookRows9=rows; state.logbookLoaded9=true; }
+      else{ state.logbookRows10=rows; state.logbookLoaded10=true; }
+      renderLogbookSchedRows(battery);
+    }
+    toast("Both schedules loaded","success");
+  }catch(e){ toast("Load failed: "+e.message,"error"); }
+}
+
+function renderLogbookSchedRows(battery){
+  const el=document.getElementById(`lbSched${battery}`); if(!el) return;
+  const rows=battery==="9"?state.logbookRows9:state.logbookRows10;
+  if(!rows.length){ el.innerHTML=`<div style="color:var(--muted);font-size:13px;">No schedule rows.</div>`; return; }
+  const machines={pushed:MASTER.PUSHER_CARS,door:MASTER.DOOR_EXTRACTORS,charged:MASTER.CHARGING_CARS};
+  el.innerHTML=`
+    <table style="font-size:11px;">
+      <thead><tr><th>#</th><th>Oven</th><th>Time</th><th>Pushed By</th><th>Door</th><th>Charged</th><th>Amp</th></tr></thead>
+      <tbody>${rows.map((r,i)=>`
+        <tr>
+          <td>${i+1}</td><td><b>${esc(r.ovenNo)}</b></td><td>${esc(r.pushTime)}</td>
+          <td><div class="machine-cell">
+            ${machines.pushed.map(m=>`<button class="machine-btn ${r.pushedBy===m?"selected":""}" onclick="pickLogbookMachine('${battery}',${i},'pushedBy','${esc(m)}')">${esc(m)}</button>`).join("")}
+            ${r.pushedBy?`<div class="chosen">→ ${esc(r.pushedBy)}</div>`:""}
+          </div></td>
+          <td><div class="machine-cell">
+            ${machines.door.map(m=>`<button class="machine-btn ${r.doorExtractedBy===m?"selected":""}" onclick="pickLogbookMachine('${battery}',${i},'doorExtractedBy','${esc(m)}')">${esc(m)}</button>`).join("")}
+            ${r.doorExtractedBy?`<div class="chosen">→ ${esc(r.doorExtractedBy)}</div>`:""}
+          </div></td>
+          <td><div class="machine-cell">
+            ${machines.charged.map(m=>`<button class="machine-btn ${r.chargedBy===m?"selected":""}" onclick="pickLogbookMachine('${battery}',${i},'chargedBy','${esc(m)}')">${esc(m)}</button>`).join("")}
+            ${r.chargedBy?`<div class="chosen">→ ${esc(r.chargedBy)}</div>`:""}
+          </div></td>
+          <td><input type="number" step="0.1" value="${esc(r.amperage||"")}" placeholder="A" style="width:55px;" oninput="pickLogbookMachineAmp('${battery}',${i},this.value)" /></td>
+        </tr>`).join("")}</tbody>
+    </table>
+  `;
+}
+function pickLogbookMachine(battery,i,key,machine){
+  const rows=battery==="9"?state.logbookRows9:state.logbookRows10;
+  rows[i][key]=rows[i][key]===machine?"":machine;
+  renderLogbookSchedRows(battery);
+}
+function pickLogbookMachineAmp(battery,i,v){
+  const rows=battery==="9"?state.logbookRows9:state.logbookRows10;
+  rows[i].amperage=v;
+}
+
+function addBreakdownRow(){
+  const wrap=document.getElementById("breakdownList"); if(!wrap) return;
+  const div=document.createElement("div");
+  div.className="grid grid-4"; div.style.marginBottom="10px";
+  div.innerHTML=`
+    <select class="bd-machine"><option value="">-- Machine --</option>
+      ${[...MASTER.PUSHER_CARS,...MASTER.CHARGING_CARS,...MASTER.DOOR_EXTRACTORS,...MASTER.QUENCHING_CARS].map(m=>`<option>${m}</option>`).join("")}
+    </select>
+    <input class="bd-desc" placeholder="Short description" />
+    <input class="bd-start" type="time" />
+    <input class="bd-end" type="time" />
+    <button class="small danger" onclick="this.parentElement.remove()">✕</button>
+  `;
+  wrap.appendChild(div);
+}
+
+async function saveLogbook(status){
+  const p=state.profile;
+  const date=document.getElementById("lb-date").value;
+  const shift=document.getElementById("lb-shift").value;
+  try{
+    const breakdowns=[];
+    document.querySelectorAll("#breakdownList > div").forEach(div=>{
+      const m=div.querySelector(".bd-machine").value;
+      const d=div.querySelector(".bd-desc").value;
+      const st=div.querySelector(".bd-start").value;
+      const en=div.querySelector(".bd-end").value;
+      if(m||d) breakdowns.push({machine:m,description:d,startTime:st,endTime:en,ongoing:!en});
+    });
+    for(const battery of ["9","10"]){
+      const loaded=battery==="9"?state.logbookLoaded9:state.logbookLoaded10;
+      const rows=battery==="9"?state.logbookRows9:state.logbookRows10;
+      const extra=battery==="9"?state.extraOvens9:state.extraOvens10;
+      const left=battery==="9"?state.leftOvens9:state.leftOvens10;
+      if(!loaded&&!extra.length&&!left.pushed.length&&!left.uncharged.length) continue;
+      const docId=`${date}_${shift}_${battery}`;
+      await FB.setDoc(FB.doc(FB.db,"logbook",docId),{
+        shift_date:date,shift,battery,
+        inchargeName:document.getElementById("lb-incharge").value,
+        inchargeDesignation:document.getElementById("lb-incharge-desig").value,
+        inchargePhone:document.getElementById("lb-phone").value,
+        manpower:{bsp:Number(document.getElementById("lb-bsp").value||0),hotJob:Number(document.getElementById("lb-hotjob").value||0),privateOperators:Number(document.getElementById("lb-pvt").value||0)},
+        pocketStart:{
+          ct5:{p1:+document.getElementById("lb-ct5-p1").value||0,p2:+document.getElementById("lb-ct5-p2").value||0,p3:+document.getElementById("lb-ct5-p3").value||0,p4:+document.getElementById("lb-ct5-p4").value||0},
+          ct6:{p1:+document.getElementById("lb-ct6-p1").value||0,p2:+document.getElementById("lb-ct6-p2").value||0,p3:+document.getElementById("lb-ct6-p3").value||0,p4:+document.getElementById("lb-ct6-p4").value||0}
+        },
+        equipmentAC:document.getElementById("lb-ac").value,
+        ovensScheduled:rows,
+        extraOvens:extra,
+        ovensLeftPushed:left.pushed.map(x=>Number(x)||0).filter(x=>x>0),
+        ovensLeftUncharged:left.uncharged.map(x=>Number(x)||0).filter(x=>x>0),
+        breakdowns,
+        wharf:{wharf5:document.getElementById("lb-wharf5").value,wharf6:document.getElementById("lb-wharf6").value},
+        pocketEnd:{
+          ct5:{p1:+document.getElementById("lb-ct5e-p1").value||0,p2:+document.getElementById("lb-ct5e-p2").value||0,p3:+document.getElementById("lb-ct5e-p3").value||0,p4:+document.getElementById("lb-ct5e-p4").value||0},
+          ct6:{p1:+document.getElementById("lb-ct6e-p1").value||0,p2:+document.getElementById("lb-ct6e-p2").value||0,p3:+document.getElementById("lb-ct6e-p3").value||0,p4:+document.getElementById("lb-ct6e-p4").value||0}
+        },
+        status:status==="submit"?"submitted":"draft",
+        createdBy:p.name,updatedBy:p.name,
+        createdAt:FB.serverTimestamp(),updatedAt:FB.serverTimestamp()
+      },{merge:true});
+    }
+    toast(status==="submit"?"Logbook SUBMITTED ✔":"Logbook saved","success");
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+
+async function viewLogbook(){
+  const from=document.getElementById("lbv-from").value;
+  const to=document.getElementById("lbv-to").value;
+  const shiftFilter=document.getElementById("lbv-shift").value;
+  const el=document.getElementById("lbv-results");
+  el.innerHTML=`<div>Loading…</div>`;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"logbook"));
+    let docs=snap.docs.map(d=>d.data()).filter(d=>d.status==="submitted").filter(d=>d.shift_date>=from&&d.shift_date<=to);
+    if(shiftFilter) docs=docs.filter(d=>d.shift===shiftFilter);
+    docs.sort((a,b)=>((a.shift_date||"")+(a.shift||"")+(a.battery||"")).localeCompare((b.shift_date||"")+(b.shift||"")+(b.battery||"")));
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No submitted logbooks.</div>`; return; }
+    el.innerHTML=`
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Found ${docs.length} submitted logbook(s)</p>
+      <table><thead><tr><th>Date</th><th>Shift</th><th>Battery</th><th>Incharge</th><th>Phone</th><th>Ovens</th><th>Actions</th></tr></thead>
+      <tbody>${docs.map((d,i)=>`
+        <tr><td>${esc(d.shift_date)}</td><td>${esc(d.shift)}</td><td>${esc(d.battery)}</td>
+        <td>${esc(d.inchargeName||d.createdBy)}</td><td>${esc(d.inchargePhone||"—")}</td>
+        <td>${(d.ovensScheduled||[]).length}</td>
+        <td><button class="small secondary" onclick="openLogbookDoc(${i})">View</button></td></tr>`).join("")}</tbody></table>
+      <div id="lbv-detail"></div>
+    `;
+    window.__lbvDocs=docs;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+function openLogbookDoc(i){
+  const d=window.__lbvDocs[i];
+  document.getElementById("lbv-detail").innerHTML=`
+    <div class="section-label" style="margin-top:22px;">LOGBOOK — ${esc(d.shift_date)} · Shift ${esc(d.shift)} · Battery ${esc(d.battery)}</div>
+    <table style="margin-bottom:14px;">
+      <tr><th style="width:30%;">Incharge</th><td>${esc(d.inchargeName||d.createdBy)} (${esc(d.inchargeDesignation||"—")})</td></tr>
+      <tr><th>Phone</th><td>${esc(d.inchargePhone||"—")}</td></tr>
+      <tr><th>Manpower (BSP/Hot/Pvt)</th><td>${d.manpower?.bsp??0} / ${d.manpower?.hotJob??0} / ${d.manpower?.privateOperators??0}</td></tr>
+      <tr><th>Equipment AC</th><td>${esc(d.equipmentAC||"—")}</td></tr>
+      <tr><th>Wharf 5/6</th><td>${esc(d.wharf?.wharf5||"—")} / ${esc(d.wharf?.wharf6||"—")}</td></tr>
+    </table>
+    <div class="section-label">Ovens Scheduled</div>
+    <table><thead><tr><th>#</th><th>Oven</th><th>Time</th><th>Pushed By</th><th>Door Ext.</th><th>Charged By</th><th>Amp</th></tr></thead>
+      <tbody>${(d.ovensScheduled||[]).map((o,idx)=>`
+        <tr><td>${idx+1}</td><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td>
+        <td>${esc(o.pushedBy||"—")}</td><td>${esc(o.doorExtractedBy||"—")}</td><td>${esc(o.chargedBy||"—")}</td>
+        <td>${esc(o.amperage||"—")}</td></tr>`).join("")}</tbody></table>
+    ${(d.extraOvens||[]).length?`<div class="section-label">Extra Ovens</div>
+      <table><thead><tr><th>Oven</th><th>Time</th><th>Pushed By</th><th>Door Ext.</th><th>Charged By</th><th>Amp</th></tr></thead>
+        <tbody>${d.extraOvens.map(o=>`<tr><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td><td>${esc(o.pushedBy||"—")}</td><td>${esc(o.doorExtractedBy||"—")}</td><td>${esc(o.chargedBy||"—")}</td><td>${esc(o.amperage||"—")}</td></tr>`).join("")}</tbody></table>`:""}
+    ${(d.ovensLeftPushed||[]).length?`<div class="section-label">Left Pushed</div><div>${d.ovensLeftPushed.join(", ")}</div>`:""}
+    ${(d.ovensLeftUncharged||[]).length?`<div class="section-label">Left Uncharged</div><div>${d.ovensLeftUncharged.join(", ")}</div>`:""}
+  `;
+}
+
+async function printLogbook(){
+  const from=document.getElementById("lbv-from").value;
+  const to=document.getElementById("lbv-to").value;
+  const shiftFilter=document.getElementById("lbv-shift").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"logbook"));
+  let docs=snap.docs.map(d=>d.data()).filter(d=>d.status==="submitted").filter(d=>d.shift_date>=from&&d.shift_date<=to);
+  if(shiftFilter) docs=docs.filter(d=>d.shift===shiftFilter);
+  docs.sort((a,b)=>((a.shift_date||"")+(a.shift||"")+(a.battery||"")).localeCompare((b.shift_date||"")+(b.shift||"")+(b.battery||"")));
+  if(!docs.length) return toast("No submitted data to print","error");
+  const w=window.open("","_blank");
+  const body=docs.map(d=>`
+    <div class="blk">
+      <div class="blk-head">Date: ${esc(d.shift_date)} · Shift: ${esc(d.shift)} · Battery: ${esc(d.battery)}</div>
+      <table><tr><td style="background:#f8fafc;font-weight:600;width:35%;">Shift Incharge</td><td>${esc(d.inchargeName||d.createdBy)} (${esc(d.inchargeDesignation||"—")})</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Phone Number</td><td>${esc(d.inchargePhone||"—")}</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Manpower (BSP / Hot / Pvt)</td><td>${d.manpower?.bsp??0} / ${d.manpower?.hotJob??0} / ${d.manpower?.privateOperators??0}</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Equipment AC</td><td>${esc(d.equipmentAC||"—")}</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Wharf 5 / Wharf 6</td><td>${esc(d.wharf?.wharf5||"—")} / ${esc(d.wharf?.wharf6||"—")}</td></tr></table>
+      <div class="section-title">Ovens Scheduled</div>
+      <table><thead><tr><th>#</th><th>Oven No</th><th>Push Time</th><th>Pushed By</th><th>Door Extracted</th><th>Charged By</th><th>Amperage</th></tr></thead>
+        <tbody>${(d.ovensScheduled||[]).map((o,idx)=>`<tr><td>${idx+1}</td><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td><td>${esc(o.pushedBy||"—")}</td><td>${esc(o.doorExtractedBy||"—")}</td><td>${esc(o.chargedBy||"—")}</td><td>${esc(o.amperage||"—")}</td></tr>`).join("")}</tbody></table>
+      ${(d.extraOvens||[]).length?`<div class="section-title">Extra Ovens Pushed</div>
+        <table><thead><tr><th>Oven</th><th>Time</th><th>Pushed By</th><th>Door Extracted</th><th>Charged By</th><th>Amperage</th></tr></thead>
+          <tbody>${d.extraOvens.map(o=>`<tr><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td><td>${esc(o.pushedBy||"—")}</td><td>${esc(o.doorExtractedBy||"—")}</td><td>${esc(o.chargedBy||"—")}</td><td>${esc(o.amperage||"—")}</td></tr>`).join("")}</tbody></table>`:""}
+      ${(d.ovensLeftPushed||[]).length?`<div class="section-title">Ovens Left to be Pushed</div><div style="padding:8px;font-size:12px;">${d.ovensLeftPushed.join(", ")}</div>`:""}
+      ${(d.ovensLeftUncharged||[]).length?`<div class="section-title">Ovens Left Uncharged</div><div style="padding:8px;font-size:12px;">${d.ovensLeftUncharged.join(", ")}</div>`:""}
+    </div>`).join("");
+  w.document.write(`<html><head><title>Logbook Print</title>${printStyles()}</head><body>${printHeaderHTML("Logbook Report",`${from} to ${to}${shiftFilter?" · Shift "+shiftFilter:""}`)}${body}${printFooterHTML()}</body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ TAB: SCHEDULE ================
+async function renderSchedule(){
+  const edit=canEdit("schedule");
+  state.generatedOvens=[]; state.scheduleEditId=null;
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🔥 Oven Pushing Schedule — HR</h2><div class="tag">${edit?"HR · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        ${!edit?`<div class="msg info">Read-only view.</div>`:""}
+        <div class="grid grid-4">
+          <div><label class="lbl">DATE</label><input type="date" id="sc-date" value="${todayISO()}" onchange="checkExistingSchedule()" /></div>
+          <div><label class="lbl">SHIFT</label><select id="sc-shift" onchange="checkExistingSchedule()">${MASTER.SHIFTS.map(s=>`<option>${s}</option>`).join("")}</select></div>
+          <div><label class="lbl">BATTERY</label><select id="sc-battery" onchange="checkExistingSchedule()">${MASTER.BATTERIES.map(b=>`<option>${b}</option>`).join("")}</select></div>
+          <div><label class="lbl">START OVEN NUMBER</label><input type="number" id="sc-startOven" placeholder="Optional" /></div>
+          <div><label class="lbl">TOTAL OVENS</label><input type="number" id="sc-total" value="20" min="1" max="67" /></div>
+          <div><label class="lbl">PUSHING START TIME</label><input type="time" id="sc-start" value="${nowHHMM()}" /></div>
+          <div><label class="lbl">MIN COKING — HRS</label><input type="number" id="sc-mch" value="18" min="0" /></div>
+          <div><label class="lbl">MIN COKING — MIN</label><input type="number" id="sc-mcm" value="0" min="0" max="59" /></div>
+        </div>
+        <div class="grid grid-2" style="margin-top:14px;">
+          <div><label class="lbl">HR NAME</label><input id="sc-hrname" value="${esc(state.profile.name)}" /></div>
+          <div><label class="lbl">DESIGNATION</label><input id="sc-hrdesig" value="${esc(state.profile.designation)}" /></div>
+        </div>
+        <div class="section-label">SCREWFEEDER REVOLUTION</div>
+        <div class="grid grid-3">
+          <div><label class="lbl">HIGH SPEED (rev)</label><input type="number" id="sc-high" value="0" onchange="updateScrewFeeder()" /></div>
+          <div><label class="lbl">LOW SPEED (rev)</label><input type="number" id="sc-low" value="0" onchange="updateScrewFeeder()" /></div>
+          <div><label class="lbl">TOTAL (HIGH + LOW)</label><input type="number" id="sc-totalRev" value="0" readonly style="background:#e8edf2;font-weight:700;" /></div>
+        </div>
+        <div id="sc-existingMsg"></div>
+        ${edit?`<div class="row" style="margin-top:18px;">
+          <button onclick="generateSchedulePreview()">⚡ Auto-Generate</button>
+          <button class="secondary" onclick="startManualSchedule()">✍️ Manual Entry</button>
+          <button class="secondary" onclick="clearGenerated()">🗑 Clear</button>
+        </div>`:""}
+        <div class="msg info" style="margin-top:14px;"><b>Manual Entry</b>: click to add ovens one by one. <b>＋</b> on any row to add between.</div>
+        <table id="sc-table" style="margin-top:14px;">
+          <thead><tr><th>#</th><th>Oven No</th><th>Push Time</th><th>Series</th><th>Oven Remarks</th>${edit?"<th>Action</th>":""}</tr></thead>
+          <tbody><tr><td colspan="${edit?6:5}" style="text-align:center;color:var(--muted);">Click Auto-Generate or Manual Entry</td></tr></tbody>
+        </table>
+        <div style="margin-top:14px;"><label class="lbl">FINAL REMARKS</label><input id="sc-finalRemarks" placeholder="Final remarks" /></div>
+        ${edit?`<div class="row-end"><button onclick="saveSchedule()">💾 Save Schedule</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW SCHEDULE</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="scv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="scv-to" value="${todayISO()}" /></div>
+          <div><label class="lbl">SHIFT</label><select id="scv-shift"><option value="">All</option>${MASTER.SHIFTS.map(s=>`<option>${s}</option>`).join("")}</select></div>
+          <div><label class="lbl">BATTERY</label><select id="scv-battery"><option value="">All</option>${MASTER.BATTERIES.map(b=>`<option>${b}</option>`).join("")}</select></div>
+          <div><button class="secondary" onclick="viewSchedule()">🔍 View</button></div>
+          <div><button onclick="printSchedule()">🖨️ Print</button></div>
+        </div>
+        <div id="scv-results"></div>
+      </div>
+    </div>
+  `;
+  clearGenerated();
+  await checkExistingSchedule();
+}
+
+async function checkExistingSchedule(){
+  const date=document.getElementById("sc-date").value;
+  const shift=document.getElementById("sc-shift").value;
+  const battery=document.getElementById("sc-battery").value;
+  const docId=`${date}_${shift}_${battery}`;
+  const el=document.getElementById("sc-existingMsg");
+  try{
+    const snap=await FB.getDoc(FB.doc(FB.db,"ovenSchedules",docId));
+    if(snap.exists()){
+      const d=snap.data();
+      state.scheduleEditId=docId;
+      el.innerHTML=`<div class="msg warn">Existing schedule found. Loaded for <b>edit</b> — saving will overwrite.</div>`;
+      document.getElementById("sc-start").value=d.pushingStartTime||"";
+      document.getElementById("sc-mch").value=d.minCokingPeriod?.hours||0;
+      document.getElementById("sc-mcm").value=d.minCokingPeriod?.minutes||0;
+      document.getElementById("sc-hrname").value=d.hrName||state.profile.name;
+      document.getElementById("sc-hrdesig").value=d.hrDesignation||state.profile.designation;
+      document.getElementById("sc-high").value=d.screwFeeder?.high||0;
+      document.getElementById("sc-low").value=d.screwFeeder?.low||0;
+      document.getElementById("sc-totalRev").value=d.screwFeeder?.total||0;
+      document.getElementById("sc-total").value=d.totalOvens||20;
+      document.getElementById("sc-finalRemarks").value=d.finalRemarks||"";
+      state.generatedOvens=(d.ovens||[]).map(o=>({...o}));
+      renderScheduleTable();
+    }else{
+      state.scheduleEditId=null;
+      el.innerHTML="";
+      clearGenerated();
+    }
+  }catch(e){}
+}
+
+function updateScrewFeeder(){
+  const h=Number(document.getElementById("sc-high").value||0);
+  const l=Number(document.getElementById("sc-low").value||0);
+  document.getElementById("sc-totalRev").value=h+l;
+}
+function startManualSchedule(){
+  addManualOvenRow();
+}
+function addManualOvenRow(){
+  const battery=document.getElementById("sc-battery").value;
+  state.generatedOvens.push({ovenNo:battery==="9"?901:1001,pushTime:nowHHMM(),isManual:true,seriesTag:null,remarks:""});
+  renderScheduleTable();
+  toast("Oven added — fill details, then click ＋ to add more","info");
+}
+function clearGenerated(){
+  state.generatedOvens=[];
+  const tb=document.querySelector("#sc-table tbody");
+  const edit=canEdit("schedule");
+  if(tb) tb.innerHTML=`<tr><td colspan="${edit?6:5}" style="text-align:center;color:var(--muted);">Click Auto-Generate or Manual Entry</td></tr>`;
+}
+function renderScheduleTable(){
+  const edit=canEdit("schedule");
+  const tbody=document.querySelector("#sc-table tbody");
+  if(!state.generatedOvens.length){
+    tbody.innerHTML=`<tr><td colspan="${edit?6:5}" style="text-align:center;color:var(--muted);">No ovens. Use Auto-Generate or Manual Entry.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=state.generatedOvens.map((o,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${edit?`<input type="number" value="${o.ovenNo}" style="width:100px;" onchange="updateOven(${i},'ovenNo',this.value)" />`:`<b>${o.ovenNo}</b>`}</td>
+      <td>${edit?`<input type="time" value="${o.pushTime}" onchange="updateOven(${i},'pushTime',this.value)" />`:esc(o.pushTime)}</td>
+      <td>${o.isManual?'<span class="pill amber">manual</span>':`<span class="pill blue">S${o.seriesTag??"?"}</span>`}</td>
+      <td>${edit?`<input value="${esc(o.remarks||"")}" placeholder="Remarks" onchange="updateOven(${i},'remarks',this.value)" />`:esc(o.remarks||"—")}</td>
+      ${edit?`<td>
+        <button class="small secondary" onclick="insertOvenAfter(${i})">＋</button>
+        <button class="small danger" onclick="deleteOvenRow(${i})" style="margin-left:4px;">✕</button>
+      </td>`:""}
+    </tr>`).join("");
+}
+function updateOven(i,key,val){
+  if(key==="ovenNo"){
+    const n=Number(val);
+    state.generatedOvens[i].ovenNo=n;
+    const battery=document.getElementById("sc-battery").value;
+    const rel=physicalToRelative(n,battery);
+    const pos=findSeriesPosition(rel);
+    if(pos&&state.generatedOvens[i].expectedRelative===rel){
+      state.generatedOvens[i].isManual=false;
+      state.generatedOvens[i].seriesTag=pos.series;
+    }else{
+      state.generatedOvens[i].isManual=true;
+      state.generatedOvens[i].seriesTag=null;
+    }
+  }else state.generatedOvens[i][key]=val;
+}
+function deleteOvenRow(i){ state.generatedOvens.splice(i,1); renderScheduleTable(); }
+function insertOvenAfter(i){
+  const battery=document.getElementById("sc-battery").value;
+  state.generatedOvens.splice(i+1,0,{ovenNo:battery==="9"?901:1001,pushTime:nowHHMM(),isManual:true,seriesTag:null,remarks:""});
+  renderScheduleTable();
+  toast("Manual oven inserted","info");
+}
+async function findCursor(battery){
+  try{
+    const q=FB.query(FB.collection(FB.db,"ovenSchedules"),FB.where("battery","==",battery));
+    const snap=await FB.getDocs(q);
+    if(snap.empty) return null;
+    const docs=snap.docs.map(d=>d.data());
+    docs.sort((a,b)=>{
+      const ta=a.createdAt?.seconds||0, tb=b.createdAt?.seconds||0;
+      if(tb!==ta) return tb-ta;
+      return (a.shift_date+a.shift).localeCompare(b.shift_date+b.shift);
+    });
+    const latest=docs[0];
+    if(!latest.ovens) return null;
+    for(let i=latest.ovens.length-1;i>=0;i--){
+      const o=latest.ovens[i];
+      if(!o.isManual){
+        const rel=physicalToRelative(o.ovenNo,battery);
+        const pos=findSeriesPosition(rel);
+        if(pos) return pos;
+      }
+    }
+    return null;
+  }catch(e){ return null; }
+}
+async function generateSchedulePreview(){
+  const total=Number(document.getElementById("sc-total").value);
+  const start=document.getElementById("sc-start").value;
+  const battery=document.getElementById("sc-battery").value;
+  const startOvenInput=document.getElementById("sc-startOven").value;
+  if(!total||total<1||total>67) return toast("Total ovens must be 1–67","error");
+  if(!start) return toast("Set pushing start time","error");
+  let cursor=null;
+  if(startOvenInput){
+    const rel=physicalToRelative(Number(startOvenInput),battery);
+    const pos=findSeriesPosition(rel);
+    if(!pos) return toast("Start oven not in sequence series","error");
+    cursor={series:pos.series,indexInSeries:pos.indexInSeries-1};
+    if(cursor.indexInSeries<0){
+      const si=SERIES_ORDER.indexOf(pos.series);
+      const prev=SERIES_ORDER[(si-1+SERIES_ORDER.length)%SERIES_ORDER.length];
+      cursor.series=prev;
+      cursor.indexInSeries=SERIES[prev].length-1;
+    }
+  }else cursor=await findCursor(battery);
+  const seq=generateSequence(cursor,total);
+  const times=spreadTimes(start,total,480);
+  state.generatedOvens=seq.map((s,i)=>({
+    ovenNo:relativeToPhysical(s.relative,battery),
+    pushTime:times[i],isManual:false,seriesTag:s.series,
+    expectedRelative:s.relative,remarks:""
+  }));
+  renderScheduleTable();
+  toast(`Generated ${total} ovens`,"success");
+}
+async function saveSchedule(){
+  const p=state.profile;
+  if(!state.generatedOvens.length) return toast("Nothing to save","error");
+  const date=document.getElementById("sc-date").value;
+  const shift=document.getElementById("sc-shift").value;
+  const battery=document.getElementById("sc-battery").value;
+  const docId=`${date}_${shift}_${battery}`;
+  try{
+    await FB.setDoc(FB.doc(FB.db,"ovenSchedules",docId),{
+      shift_date:date,shift,battery,
+      hrName:document.getElementById("sc-hrname").value,
+      hrDesignation:document.getElementById("sc-hrdesig").value,
+      totalOvens:Number(document.getElementById("sc-total").value),
+      pushingStartTime:document.getElementById("sc-start").value,
+      minCokingPeriod:{hours:Number(document.getElementById("sc-mch").value||0),minutes:Number(document.getElementById("sc-mcm").value||0)},
+      screwFeeder:{high:Number(document.getElementById("sc-high").value||0),low:Number(document.getElementById("sc-low").value||0),total:Number(document.getElementById("sc-totalRev").value||0)},
+      ovens:state.generatedOvens.map(o=>({
+        ovenNo:o.ovenNo,pushTime:o.pushTime,isManual:!!o.isManual,
+        seriesTag:o.seriesTag||null,remarks:o.remarks||"",
+        expectedRelative:o.expectedRelative||null
+      })),
+      finalRemarks:document.getElementById("sc-finalRemarks").value,
+      createdBy:p.name,updatedBy:p.name,
+      createdAt:FB.serverTimestamp(),updatedAt:FB.serverTimestamp()
+    },{merge:true});
+    toast("Schedule saved ✔","success");
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function viewSchedule(){
+  const from=document.getElementById("scv-from").value;
+  const to=document.getElementById("scv-to").value;
+  const shiftFilter=document.getElementById("scv-shift").value;
+  const batteryFilter=document.getElementById("scv-battery").value;
+  const el=document.getElementById("scv-results");
+  el.innerHTML=`<div>Loading…</div>`;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"ovenSchedules"));
+    let docs=snap.docs.map(d=>d.data()).filter(d=>d.shift_date>=from&&d.shift_date<=to);
+    if(shiftFilter) docs=docs.filter(d=>d.shift===shiftFilter);
+    if(batteryFilter) docs=docs.filter(d=>d.battery===batteryFilter);
+    docs.sort((a,b)=>((a.shift_date||"")+(a.shift||"")+(a.battery||"")).localeCompare((b.shift_date||"")+(b.shift||"")+(b.battery||"")));
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No schedules found.</div>`; return; }
+    el.innerHTML=`
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Found ${docs.length} schedule(s)</p>
+      <table><thead><tr><th>Date</th><th>Shift</th><th>Battery</th><th>Total</th><th>Min Coking</th><th>Screw Rev</th><th>HR</th><th>Action</th></tr></thead>
+      <tbody>${docs.map((d,i)=>`
+        <tr><td>${esc(d.shift_date)}</td><td>${esc(d.shift)}</td><td>${esc(d.battery)}</td>
+        <td>${d.totalOvens}</td><td>${d.minCokingPeriod?.hours??0}h ${d.minCokingPeriod?.minutes??0}m</td>
+        <td>${d.screwFeeder?.high??0}/${d.screwFeeder?.low??0}/${d.screwFeeder?.total??0}</td>
+        <td>${esc(d.hrName||d.createdBy)}</td>
+        <td><button class="small secondary" onclick="openScheduleDoc(${i})">View</button></td></tr>`).join("")}</tbody></table>
+      <div id="scv-detail"></div>
+    `;
+    window.__scvDocs=docs;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+function openScheduleDoc(i){
+  const d=window.__scvDocs[i];
+  document.getElementById("scv-detail").innerHTML=`
+    <div class="section-label" style="margin-top:22px;">SCHEDULE — ${esc(d.shift_date)} · Shift ${esc(d.shift)} · Battery ${esc(d.battery)}</div>
+    <table style="margin-bottom:14px;">
+      <tr><th style="width:35%;">HR</th><td>${esc(d.hrName||d.createdBy)} (${esc(d.hrDesignation||"—")})</td></tr>
+      <tr><th>Screw Feeder</th><td>High ${d.screwFeeder?.high??0} · Low ${d.screwFeeder?.low??0} · Total ${d.screwFeeder?.total??0}</td></tr>
+      <tr><th>Min Coking</th><td>${d.minCokingPeriod?.hours??0}h ${d.minCokingPeriod?.minutes??0}m</td></tr>
+    </table>
+    <table><thead><tr><th>S.No</th><th>Oven Number</th><th>Pushing Time</th><th>Remarks</th></tr></thead>
+      <tbody>${(d.ovens||[]).map((o,idx)=>`<tr><td>${idx+1}</td><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td><td>${esc(o.remarks||"—")}</td></tr>`).join("")}</tbody></table>
+    <div class="section-label">Final Remarks</div>
+    <div style="color:var(--text-2);">${esc(d.finalRemarks||"—")}</div>
+  `;
+}
+async function printSchedule(){
+  const from=document.getElementById("scv-from").value;
+  const to=document.getElementById("scv-to").value;
+  const shiftFilter=document.getElementById("scv-shift").value;
+  const batteryFilter=document.getElementById("scv-battery").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"ovenSchedules"));
+  let docs=snap.docs.map(d=>d.data()).filter(d=>d.shift_date>=from&&d.shift_date<=to);
+  if(shiftFilter) docs=docs.filter(d=>d.shift===shiftFilter);
+  if(batteryFilter) docs=docs.filter(d=>d.battery===batteryFilter);
+  docs.sort((a,b)=>((a.shift_date||"")+(a.shift||"")+(a.battery||"")).localeCompare((b.shift_date||"")+(b.shift||"")+(b.battery||"")));
+  if(!docs.length) return toast("No data to print","error");
+  const w=window.open("","_blank");
+  const body=docs.map(d=>`
+    <div class="blk">
+      <div class="blk-head">Date: ${esc(d.shift_date)} · Shift: ${esc(d.shift)} · Battery: ${esc(d.battery)}</div>
+      <table>
+        <tr><td style="background:#f8fafc;font-weight:600;width:35%;">HR</td><td>${esc(d.hrName||d.createdBy)} (${esc(d.hrDesignation||"—")})</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Screw Feeder (H / L / T)</td><td>${d.screwFeeder?.high??0} / ${d.screwFeeder?.low??0} / ${d.screwFeeder?.total??0}</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Min Coking Period</td><td>${d.minCokingPeriod?.hours??0}h ${d.minCokingPeriod?.minutes??0}m</td></tr>
+      </table>
+      <div class="section-title">Oven Schedule</div>
+      <table><thead><tr><th>S.No</th><th>Oven Number</th><th>Pushing Time</th><th>Remarks</th></tr></thead>
+        <tbody>${(d.ovens||[]).map((o,idx)=>`<tr><td>${idx+1}</td><td>${esc(o.ovenNo)}</td><td>${esc(o.pushTime)}</td><td>${esc(o.remarks||"")}</td></tr>`).join("")}</tbody></table>
+      <div class="section-title">Final Remarks</div>
+      <div style="padding:8px;font-size:12px;">${esc(d.finalRemarks||"—")}</div>
+    </div>`).join("");
+  w.document.write(`<html><head><title>Schedule Print</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Oven Pushing Schedule",`${from} to ${to}${shiftFilter?" · Shift "+shiftFilter:""}${batteryFilter?" · Battery "+batteryFilter:""}`)}
+    ${body}${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ TAB: OVEN JOB ================
+async function renderOvenJob(){
+  const edit=canEdit("ovenjob");
+  state.selectedInOvenJobs=[];
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🧱 Oven Job Entry — Admin</h2><div class="tag">${edit?"Admin · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        ${!edit?`<div class="msg info">Read-only view.</div>`:""}
+        <div class="grid grid-4">
+          <div><label class="lbl">DATE</label><input type="date" id="oj-date" value="${todayISO()}" /></div>
+          <div><label class="lbl">SHIFT</label><select id="oj-shift">${MASTER.SHIFTS.map(s=>`<option>${s}</option>`).join("")}</select></div>
+          <div><label class="lbl">BATTERY</label><select id="oj-battery">${MASTER.BATTERIES.map(b=>`<option>${b}</option>`).join("")}</select></div>
+          <div><label class="lbl">OVEN NUMBER</label><input type="number" id="oj-oven" placeholder="e.g. 901" /></div>
+        </div>
+        <div class="section-label">SELECT JOB TYPE(S)</div>
+        <div class="opt-wrap" id="oj-job-btns">
+          ${MASTER.OVEN_JOBS.map(j=>`<div class="opt-btn" data-job="${esc(j)}" onclick="toggleSingleJob('${esc(j)}')">${esc(j)}</div>`).join("")}
+        </div>
+        <div id="oj-job-details"></div>
+        ${edit?`<div class="row-end"><button onclick="saveOvenJobEntry()">💾 Save Job Entry</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW / PRINT OVEN JOBS</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="ojv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="ojv-to" value="${todayISO()}" /></div>
+          <div><label class="lbl">BATTERY</label><select id="ojv-battery"><option value="">All</option>${MASTER.BATTERIES.map(b=>`<option>${b}</option>`).join("")}</select></div>
+          <div><label class="lbl">JOB FILTER</label><select id="ojv-job"><option value="">All Jobs</option>${MASTER.OVEN_JOBS.map(j=>`<option>${j}</option>`).join("")}</select></div>
+          <div><label class="lbl">OVEN FROM</label><input type="number" id="ojv-ovenFrom" placeholder="e.g. 901" /></div>
+          <div><label class="lbl">OVEN TO</label><input type="number" id="ojv-ovenTo" placeholder="e.g. 950" /></div>
+          <div><button class="secondary" onclick="viewOvenJobs()">🔍 View</button></div>
+          <div><button onclick="printOvenJobs()">🖨️ Print</button></div>
+        </div>
+        <div id="ojv-results"></div>
+      </div>
+    </div>
+  `;
+}
+function toggleSingleJob(job){
+  const idx=state.selectedInOvenJobs.indexOf(job);
+  if(idx===-1) state.selectedInOvenJobs.push(job); else state.selectedInOvenJobs.splice(idx,1);
+  document.querySelectorAll("#oj-job-btns .opt-btn").forEach(b=>b.classList.toggle("selected",state.selectedInOvenJobs.includes(b.dataset.job)));
+  renderSingleJobDetails();
+}
+function renderSingleJobDetails(){
+  const wrap=document.getElementById("oj-job-details");
+  if(!state.selectedInOvenJobs.length){ wrap.innerHTML=""; return; }
+  wrap.innerHTML=state.selectedInOvenJobs.map(j=>{
+    const sides=MASTER.JOB_SIDES[j]||["Pusher Side","Coke Side"];
+    return `<div class="opt-detail">
+      <h4>${esc(j)} — details</h4>
+      <div class="grid grid-2">
+        <div><label class="lbl">SIDE</label><select class="job-side" data-job="${esc(j)}">${sides.map(s=>`<option>${s}</option>`).join("")}</select></div>
+        <div><label class="lbl">REMARKS</label><input class="job-remarks" data-job="${esc(j)}" placeholder="Remarks" /></div>
+      </div></div>`;
+  }).join("");
+}
+async function saveOvenJobEntry(){
+  const p=state.profile;
+  const ovenNo=Number(document.getElementById("oj-oven").value);
+  if(!ovenNo) return toast("Enter oven number","error");
+  if(!state.selectedInOvenJobs.length) return toast("Select at least one job","error");
+  try{
+    const jobs=state.selectedInOvenJobs.map(j=>({
+      job:j,
+      side:document.querySelector(`.job-side[data-job="${CSS.escape(j)}"]`)?.value||"",
+      remarks:document.querySelector(`.job-remarks[data-job="${CSS.escape(j)}"]`)?.value||""
+    }));
+    await FB.addDoc(FB.collection(FB.db,"ovenJobs"),{
+      date:document.getElementById("oj-date").value,
+      shift:document.getElementById("oj-shift").value,
+      battery:document.getElementById("oj-battery").value,
+      ovenNo,jobs,
+      createdBy:p.name,createdAt:FB.serverTimestamp(),
+    });
+    toast("Oven job saved ✔","success");
+    state.selectedInOvenJobs=[];
+    document.querySelectorAll("#oj-job-btns .opt-btn").forEach(b=>b.classList.remove("selected"));
+    document.getElementById("oj-job-details").innerHTML="";
+    document.getElementById("oj-oven").value="";
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function fetchOvenJobsFiltered(){
+  const from=document.getElementById("ojv-from").value;
+  const to=document.getElementById("ojv-to").value;
+  const battery=document.getElementById("ojv-battery").value;
+  const jobFilter=document.getElementById("ojv-job").value;
+  const ovenFrom=Number(document.getElementById("ojv-ovenFrom").value||0);
+  const ovenTo=Number(document.getElementById("ojv-ovenTo").value||99999);
+  const snap=await FB.getDocs(FB.collection(FB.db,"ovenJobs"));
+  return snap.docs.map(d=>d.data())
+    .filter(d=>d.date>=from&&d.date<=to)
+    .filter(d=>!battery||d.battery===battery)
+    .filter(d=>{const on=Number(d.ovenNo);return (!ovenFrom||on>=ovenFrom)&&(!ovenTo||on<=ovenTo);})
+    .filter(d=>!jobFilter||(d.jobs||[]).some(j=>j.job===jobFilter))
+    .sort((a,b)=>((a.date||"")+(a.battery||"")+String(a.ovenNo||"")).localeCompare((b.date||"")+(b.battery||"")+String(b.ovenNo||"")));
+}
+async function viewOvenJobs(){
+  const el=document.getElementById("ojv-results");
+  el.innerHTML="Loading…";
+  try{
+    const docs=await fetchOvenJobsFiltered();
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No oven jobs in range.</div>`; return; }
+    el.innerHTML=`
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Found ${docs.length} entries</p>
+      <table><thead><tr><th>Date</th><th>Shift</th><th>Battery</th><th>Oven</th><th>Jobs</th></tr></thead>
+      <tbody>${docs.map(d=>`
+        <tr><td>${esc(d.date)}</td><td>${esc(d.shift)}</td><td>${esc(d.battery)}</td>
+        <td><b>${esc(d.ovenNo)}</b></td>
+        <td>${(d.jobs||[]).map(x=>`<span class="pill blue">${esc(x.job)} (${esc(x.side)})${x.remarks?` — ${esc(x.remarks)}`:""}</span>`).join(" ")||"—"}</td></tr>`).join("")}</tbody></table>`;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function printOvenJobs(){
+  const docs=await fetchOvenJobsFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("ojv-from").value;
+  const to=document.getElementById("ojv-to").value;
+  const battery=document.getElementById("ojv-battery").value||"All";
+  const jobFilter=document.getElementById("ojv-job").value||"All Jobs";
+  const w=window.open("","_blank");
+  w.document.write(`<html><head><title>Oven Jobs</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Oven Jobs Report",`${from} to ${to}`)}
+    <p style="font-size:12px;color:#4b6076;">Battery: <b>${esc(battery)}</b> · Job: <b>${esc(jobFilter)}</b></p>
+    <table><thead><tr><th>Date</th><th>Shift</th><th>Battery</th><th>Oven</th><th>Jobs</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${esc(d.shift)}</td><td>${esc(d.battery)}</td><td>${esc(d.ovenNo)}</td>
+        <td>${(d.jobs||[]).map(x=>`${x.job} (${x.side})${x.remarks?` — ${x.remarks}`:""}`).join("<br>")||"—"}</td></tr>`).join("")}
+      </tbody></table>${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ TAB: DAILY PLAN (Wharf/Track now inside Equipment) ================
+async function renderDailyPlan(){
+  const edit=canEdit("dailyplan");
+  state.selectedPPM=[];
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>📋 Today's Plan — Admin</h2><div class="tag">${edit?"Admin · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="grid grid-3">
+          <div><label class="lbl">DATE</label><input type="date" id="dp-date" value="${todayISO()}" onchange="loadExistingDailyPlan()" /></div>
+          <div><label class="lbl">ADMIN NAME</label><input id="dp-admin" value="${esc(state.profile.name)}" /></div>
+          <div><label class="lbl">DESIGNATION</label><input id="dp-desig" value="${esc(state.profile.designation)}" /></div>
+        </div>
+        <div class="section-label">EQUIPMENT UNDER PPM / OPERATIONAL</div>
+        <div class="msg info">Click each machine, wharf, or track to record its status for today.</div>
+        <div class="opt-wrap" id="dp-ppm-machines">
+          ${MASTER.ALL_EQUIPMENT.map(m=>`<div class="opt-btn" data-m="${esc(m)}" onclick="togglePPM('${esc(m)}')">${esc(m)}</div>`).join("")}
+        </div>
+        <div id="dp-ppm-details"></div>
+        <div class="section-label">OTHER OVEN-RELATED / ASSOCIATED JOBS</div>
+        <textarea id="dp-other" placeholder="..."></textarea>
+        ${edit?`<div class="row-end">
+          <button class="secondary" onclick="loadExistingDailyPlan()">📂 Load Existing</button>
+          <button onclick="saveDailyPlan()">💾 Save Today's Plan</button>
+        </div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW TODAY'S PLAN</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="dpv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="dpv-to" value="${todayISO()}" /></div>
+          <div style="min-width:220px;"><label class="lbl">EQUIPMENT FILTER</label>
+            <select id="dpv-equip"><option value="">All Equipment</option>
+              ${MASTER.ALL_EQUIPMENT.map(m=>`<option>${m}</option>`).join("")}
+            </select></div>
+          <div><button class="secondary" onclick="viewDailyPlans()">🔍 View</button></div>
+          <div><button onclick="printDailyPlans()">🖨️ Print</button></div>
+        </div>
+        <div id="dpv-results"></div>
+      </div>
+    </div>
+  `;
+  await loadExistingDailyPlan();
+}
+async function loadExistingDailyPlan(){
+  const date=document.getElementById("dp-date").value;
+  try{
+    const snap=await FB.getDoc(FB.doc(FB.db,"dailyPlans",date));
+    if(!snap.exists()){
+      state.selectedPPM=[];
+      document.querySelectorAll("#dp-ppm-machines .opt-btn").forEach(b=>b.classList.remove("selected"));
+      document.getElementById("dp-ppm-details").innerHTML="";
+      document.getElementById("dp-other").value="";
+      return;
+    }
+    const found=snap.data();
+    document.getElementById("dp-admin").value=found.adminName||"";
+    document.getElementById("dp-desig").value=found.adminDesignation||"";
+    document.getElementById("dp-other").value=found.otherJobs||"";
+    state.selectedPPM=(found.ppm||[]).map(x=>({...x}));
+    document.querySelectorAll("#dp-ppm-machines .opt-btn").forEach(b=>b.classList.toggle("selected",state.selectedPPM.some(x=>x.machine===b.dataset.m)));
+    renderPPMDetails();
+    toast("Loaded existing plan","success");
+  }catch(e){ console.warn(e); }
+}
+function togglePPM(machine){
+  const idx=state.selectedPPM.findIndex(x=>x.machine===machine);
+  if(idx===-1) state.selectedPPM.push({machine,half:"Full Day"});
+  else state.selectedPPM.splice(idx,1);
+  document.querySelectorAll("#dp-ppm-machines .opt-btn").forEach(b=>b.classList.toggle("selected",state.selectedPPM.some(x=>x.machine===b.dataset.m)));
+  renderPPMDetails();
+}
+function renderPPMDetails(){
+  const wrap=document.getElementById("dp-ppm-details");
+  if(!state.selectedPPM.length){ wrap.innerHTML=""; return; }
+  wrap.innerHTML=state.selectedPPM.map((x,i)=>`
+    <div class="opt-detail">
+      <h4>${esc(x.machine)}</h4>
+      <div class="grid grid-2">
+        <div><label class="lbl">HALF</label><select onchange="state.selectedPPM[${i}].half=this.value">
+          ${MASTER.PPM_HALVES.map(h=>`<option ${h===x.half?"selected":""}>${h}</option>`).join("")}</select></div>
+        <div><label class="lbl">REMARKS</label><input onchange="state.selectedPPM[${i}].remarks=this.value" value="${esc(x.remarks||"")}" placeholder="Remarks" /></div>
+      </div></div>`).join("");
+}
+async function saveDailyPlan(){
+  const p=state.profile;
+  const date=document.getElementById("dp-date").value;
+  try{
+    await FB.setDoc(FB.doc(FB.db,"dailyPlans",date),{
+      date,
+      adminName:document.getElementById("dp-admin").value,
+      adminDesignation:document.getElementById("dp-desig").value,
+      ppm:state.selectedPPM,
+      otherJobs:document.getElementById("dp-other").value,
+      createdBy:p.name,updatedAt:FB.serverTimestamp(),createdAt:FB.serverTimestamp()
+    },{merge:true});
+    toast("Today's Plan saved ✔","success");
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function fetchDailyPlansFiltered(){
+  const from=document.getElementById("dpv-from").value;
+  const to=document.getElementById("dpv-to").value;
+  const equipFilter=document.getElementById("dpv-equip").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"dailyPlans"));
+  return snap.docs.map(d=>d.data()).filter(d=>d.date>=from&&d.date<=to)
+    .filter(d=>!equipFilter||(d.ppm||[]).some(x=>x.machine===equipFilter))
+    .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+}
+async function viewDailyPlans(){
+  const el=document.getElementById("dpv-results");
+  el.innerHTML="Loading…";
+  try{
+    const docs=await fetchDailyPlansFiltered();
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No plans.</div>`; return; }
+    el.innerHTML=docs.map(d=>`
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-head" style="padding:12px 20px;"><h2 style="font-size:15px;">📋 ${esc(d.date)} — ${esc(d.adminName||"—")} (${esc(d.adminDesignation||"—")})</h2></div>
+        <div class="card-body" style="padding:18px;">
+          <div class="section-label" style="margin-top:0;">EQUIPMENT UNDER PPM / OPERATIONAL</div>
+          <div>${(d.ppm||[]).map(x=>`<span class="pill blue">${esc(x.machine)} · ${esc(x.half)}</span>`).join(" ")||"—"}</div>
+          <div class="section-label">OTHER JOBS</div>
+          <div style="color:var(--text-2);">${esc(d.otherJobs||"—")}</div>
+        </div>
+      </div>`).join("");
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function printDailyPlans(){
+  const docs=await fetchDailyPlansFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("dpv-from").value;
+  const to=document.getElementById("dpv-to").value;
+  const w=window.open("","_blank");
+  const body=docs.map(d=>`
+    <div class="blk">
+      <div class="blk-head">Date: ${esc(d.date)}</div>
+      <table>
+        <tr><td style="background:#f8fafc;font-weight:600;width:35%;">Admin</td><td>${esc(d.adminName||"—")} (${esc(d.adminDesignation||"—")})</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Equipment Under PPM / Operational</td><td>${(d.ppm||[]).map(x=>`${x.machine} (${x.half})`).join(", ")||"—"}</td></tr>
+        <tr><td style="background:#f8fafc;font-weight:600;">Other Jobs</td><td>${esc(d.otherJobs||"—")}</td></tr>
+      </table>
+    </div>`).join("");
+  w.document.write(`<html><head><title>Today's Plans</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Today's Plan Report",`${from} to ${to}`)}${body}${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ TAB: QC DETAILS ================
+// ================ TAB: QC DETAILS ================
+async function renderQCDetails(){
+  const edit=canEdit("qcdetails");
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🚃 QC Details (Loco & Wagon)</h2><div class="tag">${edit?"Admin · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="section-label">CURRENT RUNNING LOCO & WAGON — BATTERY 9</div>
+        <div id="qcCurrent9"><div style="color:var(--muted);">Loading…</div></div>
+        <div class="section-label">CURRENT RUNNING LOCO & WAGON — BATTERY 10</div>
+        <div id="qcCurrent10"><div style="color:var(--muted);">Loading…</div></div>
+        ${edit?`
+        <div class="section-label">RECORD LOCO / WAGON CHANGE</div>
+        <div class="grid grid-3">
+          <div><label class="lbl">BATTERY</label>
+            <select id="qc-battery">
+              <option value="9">Battery 9</option>
+              <option value="10">Battery 10</option>
+            </select>
+          </div>
+          <div><label class="lbl">CHANGE TYPE</label>
+            <select id="qc-type" onchange="toggleQCFields()">
+              <option value="Loco Change">Loco Change</option>
+              <option value="Wagon Change">Wagon Change</option>
+              <option value="Both">Both (Loco & Wagon)</option>
+            </select>
+          </div>
+          <div><label class="lbl">EFFECTIVE FROM (DATE OF CHANGE)</label>
+            <input type="date" id="qc-effDate" value="${todayISO()}" />
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top:14px;">
+          <div id="qc-locoField"><label class="lbl">NEW LOCO NUMBER</label>
+            <input id="qc-locoNum" placeholder="e.g. L-123" />
+          </div>
+          <div id="qc-wagonField" class="hidden"><label class="lbl">NEW WAGON NUMBER</label>
+            <input id="qc-wagonNum" placeholder="e.g. W-456" />
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <label class="lbl">REMARKS (Reason for change)</label>
+          <textarea id="qc-remarks" placeholder="Why was this change made? (e.g. Scheduled maintenance, wear & tear, breakdown, replacement)"></textarea>
+        </div>
+        <div class="row-end"><button onclick="saveQCChange()">💾 Save Change</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">HISTORY OF CHANGES</div>
+        <div class="vp-bar">
+          <div><label class="lbl">BATTERY FILTER</label>
+            <select id="qcv-battery">
+              <option value="">All</option>
+              <option value="9">Battery 9</option>
+              <option value="10">Battery 10</option>
+            </select>
+          </div>
+          <div><button class="secondary" onclick="viewQCHistory()">🔍 View</button></div>
+          <div><button onclick="printQCHistory()">🖨️ Print</button></div>
+        </div>
+        <div id="qcv-results"></div>
+      </div>
+    </div>
+  `;
+  loadQCCurrent();
+  toggleQCFields();
+}
+
+// Show/hide loco and wagon fields based on selected change type
+function toggleQCFields(){
+  const typeEl=document.getElementById("qc-type");
+  const locoField=document.getElementById("qc-locoField");
+  const wagonField=document.getElementById("qc-wagonField");
+  if(!typeEl||!locoField||!wagonField) return;
+  const type=typeEl.value;
+  if(type==="Loco Change"){
+    locoField.classList.remove("hidden");
+    wagonField.classList.add("hidden");
+  }else if(type==="Wagon Change"){
+    locoField.classList.add("hidden");
+    wagonField.classList.remove("hidden");
+  }else{
+    // Both
+    locoField.classList.remove("hidden");
+    wagonField.classList.remove("hidden");
+  }
+}
+
+async function loadQCCurrent(){
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"qcChanges"));
+    const all=snap.docs.map(d=>d.data()).sort((a,b)=>
+      (b.effectiveFrom||b.date||"").localeCompare(a.effectiveFrom||a.date||"")
+    );
+    ["9","10"].forEach(b=>{
+      const el=document.getElementById("qcCurrent"+b);
+      if(!el) return;
+      // Latest loco = most recent entry (by effectiveFrom) where newLocoNum is not empty
+      const latestLoco=all.find(x=>
+        x.battery===b &&
+        x.newLocoNum &&
+        x.newLocoNum.toString().trim()!==""
+      );
+      // Latest wagon = most recent entry where newWagonNum is not empty
+      const latestWagon=all.find(x=>
+        x.battery===b &&
+        x.newWagonNum &&
+        x.newWagonNum.toString().trim()!==""
+      );
+      el.innerHTML=`
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30%;">Component</th>
+              <th>Running Number</th>
+              <th>Effective From</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Loco</b></td>
+              <td>${esc(latestLoco?.newLocoNum||"—")}</td>
+              <td>${esc(latestLoco?.effectiveFrom||latestLoco?.date||"—")}</td>
+            </tr>
+            <tr>
+              <td><b>Wagon</b></td>
+              <td>${esc(latestWagon?.newWagonNum||"—")}</td>
+              <td>${esc(latestWagon?.effectiveFrom||latestWagon?.date||"—")}</td>
+            </tr>
+          </tbody>
+        </table>`;
+    });
+  }catch(e){ console.warn(e); }
+}
+
+async function saveQCChange(){
+  const p=state.profile;
+  const type=document.getElementById("qc-type").value;
+  const locoNum=document.getElementById("qc-locoNum")?.value.trim()||"";
+  const wagonNum=document.getElementById("qc-wagonNum")?.value.trim()||"";
+  const effDate=document.getElementById("qc-effDate").value;
+  const remarks=document.getElementById("qc-remarks").value.trim();
+
+  // Validation based on change type
+  if(type==="Loco Change" && !locoNum) return toast("Enter the new Loco number","error");
+  if(type==="Wagon Change" && !wagonNum) return toast("Enter the new Wagon number","error");
+  if(type==="Both" && (!locoNum || !wagonNum)) return toast("Enter both Loco and Wagon numbers","error");
+  if(!effDate) return toast("Select the effective from date","error");
+
+  try{
+    await FB.addDoc(FB.collection(FB.db,"qcChanges"),{
+      battery:document.getElementById("qc-battery").value,
+      date:effDate,
+      effectiveFrom:effDate,
+      changeType:type,
+      newLocoNum:locoNum,
+      newWagonNum:wagonNum,
+      remarks:remarks,
+      createdBy:p.name,
+      createdAt:FB.serverTimestamp(),
+    });
+    toast("QC change saved ✔","success");
+    // Reset only the number/remarks fields, keep battery, type, date
+    document.getElementById("qc-locoNum").value="";
+    document.getElementById("qc-wagonNum").value="";
+    document.getElementById("qc-remarks").value="";
+    loadQCCurrent();
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+
+async function viewQCHistory(){
+  const el=document.getElementById("qcv-results");
+  const bf=document.getElementById("qcv-battery").value;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"qcChanges"));
+    let docs=snap.docs.map(d=>d.data());
+    if(bf) docs=docs.filter(d=>d.battery===bf);
+    docs.sort((a,b)=>
+      (b.effectiveFrom||b.date||"").localeCompare(a.effectiveFrom||a.date||"")
+    );
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No history.</div>`; return; }
+    el.innerHTML=`
+      <table>
+        <thead>
+          <tr>
+            <th>Effective From</th>
+            <th>Battery</th>
+            <th>Change Type</th>
+            <th>Loco #</th>
+            <th>Wagon #</th>
+            <th>Remarks</th>
+            <th>By</th>
+          </tr>
+        </thead>
+        <tbody>${docs.map(d=>`
+          <tr>
+            <td>${esc(d.effectiveFrom||d.date||"—")}</td>
+            <td>Battery ${esc(d.battery)}</td>
+            <td>
+              <span class="pill ${d.changeType==="Both"?"green":d.changeType==="Loco Change"?"blue":"amber"}">
+                ${esc(d.changeType||"—")}
+              </span>
+            </td>
+            <td>${esc(d.newLocoNum||"—")}</td>
+            <td>${esc(d.newWagonNum||"—")}</td>
+            <td>${esc(d.remarks||"—")}</td>
+            <td>${esc(d.createdBy)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+
+async function printQCHistory(){
+  const bf=document.getElementById("qcv-battery").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"qcChanges"));
+  let docs=snap.docs.map(d=>d.data());
+  if(bf) docs=docs.filter(d=>d.battery===bf);
+  docs.sort((a,b)=>
+    (b.effectiveFrom||b.date||"").localeCompare(a.effectiveFrom||a.date||"")
+  );
+  if(!docs.length) return toast("No data","error");
+  const w=window.open("","_blank");
+  w.document.write(`<html><head><title>QC Details</title>${printStyles()}</head><body>
+    ${printHeaderHTML("QC Loco & Wagon Change History",bf?"Battery "+bf:"All Batteries")}
+    <table>
+      <thead>
+        <tr>
+          <th>Effective From</th>
+          <th>Battery</th>
+          <th>Change Type</th>
+          <th>Loco #</th>
+          <th>Wagon #</th>
+          <th>Remarks</th>
+          <th>By</th>
+        </tr>
+      </thead>
+      <tbody>${docs.map(d=>`<tr>
+        <td>${esc(d.effectiveFrom||d.date||"—")}</td>
+        <td>Battery ${esc(d.battery)}</td>
+        <td>${esc(d.changeType||"—")}</td>
+        <td>${esc(d.newLocoNum||"—")}</td>
+        <td>${esc(d.newWagonNum||"—")}</td>
+        <td>${esc(d.remarks||"—")}</td>
+        <td>${esc(d.createdBy)}</td>
+      </tr>`).join("")}
+      </tbody>
+    </table>
+    ${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+// ================ TAB: COAL BLEND ================
+async function renderBlend(){
+  const edit=canEdit("blend");
+  state.blendPlant="CHP I";
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🪨 Coal Blend Details — Admin</h2><div class="tag">${edit?"Admin · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="subtabs">
+          <div class="subtab active" data-plant="CHP I" onclick="switchBlendPlant('CHP I')">CHP I</div>
+          <div class="subtab" data-plant="CPP II" onclick="switchBlendPlant('CPP II')">CPP II</div>
+        </div>
+        <div class="grid grid-2">
+          <div><label class="lbl">DATE</label><input type="date" id="cb-date" value="${todayISO()}" onchange="loadBlendForDate()" /></div>
+          <div><label class="lbl">REMARKS</label><input id="cb-remarks" /></div>
+        </div>
+        <div class="section-label">DEFAULT COAL COMPONENTS — Fill percentage (0 if not used)</div>
+        <div id="cb-defaults" style="margin-top:10px;"></div>
+        <div class="section-label">CUSTOM COMPONENTS</div>
+        <div id="cb-customs" style="margin-top:10px;"></div>
+        <div class="row" style="margin-top:10px;">
+          <input id="cb-customName" placeholder="Custom coal name" style="max-width:250px;" />
+          <button class="secondary small" onclick="addCustomBlendRow()">+ Add Custom Component</button>
+        </div>
+        <div id="cb-totalMsg" class="msg info" style="margin-top:16px;">Total: 0%</div>
+        ${edit?`<div class="row-end"><button onclick="saveBlend()">💾 Save Coal Blend</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW COAL BLEND HISTORY</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="cbv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="cbv-to" value="${todayISO()}" /></div>
+          <div><label class="lbl">PLANT</label><select id="cbv-plant"><option value="">All</option><option>CHP I</option><option>CPP II</option></select></div>
+          <div><button class="secondary" onclick="viewCoalBlend()">🔍 View</button></div>
+          <div><button onclick="printCoalBlend()">🖨️ Print</button></div>
+        </div>
+        <div id="cbv-results"></div>
+      </div>
+    </div>
+  `;
+  renderDefaultBlendRows();
+  await loadBlendForDate();
+}
+function switchBlendPlant(plant){
+  state.blendPlant=plant;
+  document.querySelectorAll(".subtabs .subtab").forEach(t=>t.classList.toggle("active",t.dataset.plant===plant));
+  document.getElementById("cb-customs").innerHTML="";
+  document.querySelectorAll(".cb-default-pct").forEach(i=>i.value="");
+  document.getElementById("cb-remarks").value="";
+  updateBlendTotal();
+  loadBlendForDate();
+}
+function renderDefaultBlendRows(){
+  const el=document.getElementById("cb-defaults"); if(!el) return;
+  el.innerHTML=MASTER.DEFAULT_COALS.map(c=>`
+    <div class="grid grid-2" style="margin-bottom:8px;">
+      <input value="${esc(c)}" readonly style="background:#f1f5f9;font-weight:600;" />
+      <input class="cb-default-pct" data-coal="${esc(c)}" type="number" placeholder="%" oninput="updateBlendTotal()" />
+    </div>
+  `).join("");
+}
+function addCustomBlendRow(){
+  const name=document.getElementById("cb-customName").value.trim();
+  if(!name) return toast("Enter custom coal name","error");
+  const el=document.getElementById("cb-customs");
+  const div=document.createElement("div");
+  div.className="grid grid-2"; div.style.marginBottom="8px";
+  div.innerHTML=`
+    <input value="${esc(name)}" class="cb-custom-name" readonly style="background:#eef2f7;font-weight:600;" />
+    <div class="row" style="gap:6px;">
+      <input class="cb-custom-pct" type="number" placeholder="%" oninput="updateBlendTotal()" />
+      <button class="small danger" onclick="this.closest('.grid').remove(); updateBlendTotal();">✕</button>
+    </div>
+  `;
+  el.appendChild(div);
+  document.getElementById("cb-customName").value="";
+  updateBlendTotal();
+}
+function updateBlendTotal(){
+  let total=0;
+  document.querySelectorAll(".cb-default-pct").forEach(i=>total+=Number(i.value||0));
+  document.querySelectorAll(".cb-custom-pct").forEach(i=>total+=Number(i.value||0));
+  const el=document.getElementById("cb-totalMsg");
+  const cls=Math.abs(total-100)<0.01?"success":"warn";
+  el.className="msg "+cls;
+  el.textContent=`Total: ${total}% (must equal 100% for ${state.blendPlant})`;
+}
+async function loadBlendForDate(){
+  const date=document.getElementById("cb-date").value;
+  const plant=state.blendPlant;
+  const docId=`${plant}_${date}`;
+  try{
+    const snap=await FB.getDoc(FB.doc(FB.db,"coalBlends",docId));
+    if(!snap.exists()){
+      document.querySelectorAll(".cb-default-pct").forEach(i=>i.value="");
+      document.getElementById("cb-customs").innerHTML="";
+      document.getElementById("cb-remarks").value="";
+      updateBlendTotal();
+      return;
+    }
+    const d=snap.data();
+    document.querySelectorAll(".cb-default-pct").forEach(i=>i.value="");
+    document.getElementById("cb-customs").innerHTML="";
+    document.getElementById("cb-remarks").value=d.remarks||"";
+    (d.components||[]).forEach(c=>{
+      const def=document.querySelector(`.cb-default-pct[data-coal="${CSS.escape(c.coalName)}"]`);
+      if(def) def.value=c.percentage;
+      else{
+        const div=document.createElement("div");
+        div.className="grid grid-2"; div.style.marginBottom="8px";
+        div.innerHTML=`
+          <input value="${esc(c.coalName)}" class="cb-custom-name" readonly style="background:#eef2f7;font-weight:600;" />
+          <div class="row" style="gap:6px;">
+            <input class="cb-custom-pct" type="number" value="${c.percentage}" oninput="updateBlendTotal()" />
+            <button class="small danger" onclick="this.closest('.grid').remove(); updateBlendTotal();">✕</button>
+          </div>
+        `;
+        document.getElementById("cb-customs").appendChild(div);
+      }
+    });
+    updateBlendTotal();
+    toast("Loaded existing blend","success");
+  }catch(e){ console.warn(e); }
+}
+async function saveBlend(){
+  const p=state.profile;
+  const date=document.getElementById("cb-date").value;
+  const plant=state.blendPlant;
+  const docId=`${plant}_${date}`;
+  const components=[];
+  document.querySelectorAll(".cb-default-pct").forEach(i=>{
+    const v=Number(i.value||0);
+    if(v) components.push({coalName:i.dataset.coal,percentage:v});
+  });
+  document.querySelectorAll("#cb-customs > div").forEach(d=>{
+    const name=d.querySelector(".cb-custom-name")?.value.trim();
+    const v=Number(d.querySelector(".cb-custom-pct")?.value||0);
+    if(name&&v) components.push({coalName:name,percentage:v});
+  });
+  if(!components.length) return toast("Add at least one component","error");
+  const total=components.reduce((a,c)=>a+c.percentage,0);
+  if(Math.abs(total-100)>0.01) return toast(`Total must equal 100% for ${plant} (currently ${total}%)`,"error");
+  try{
+    await FB.setDoc(FB.doc(FB.db,"coalBlends",docId),{
+      plant,date,effectiveFrom:date,
+      components,remarks:document.getElementById("cb-remarks").value,
+      createdBy:p.name,updatedAt:FB.serverTimestamp(),createdAt:FB.serverTimestamp()
+    },{merge:true});
+    toast("Coal blend saved ✔","success");
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function fetchCoalBlendsFiltered(){
+  const from=document.getElementById("cbv-from").value;
+  const to=document.getElementById("cbv-to").value;
+  const plantFilter=document.getElementById("cbv-plant").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"coalBlends"));
+  return snap.docs.map(d=>d.data()).filter(d=>d.date>=from&&d.date<=to)
+    .filter(d=>!plantFilter||d.plant===plantFilter)
+    .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+}
+async function viewCoalBlend(){
+  const el=document.getElementById("cbv-results");
+  el.innerHTML="Loading…";
+  try{
+    const docs=await fetchCoalBlendsFiltered();
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No blend records.</div>`; return; }
+    el.innerHTML=docs.map(d=>`
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-head" style="padding:12px 20px;"><h2 style="font-size:15px;">🪨 ${esc(d.plant||"—")} · ${esc(d.date)}</h2></div>
+        <div class="card-body" style="padding:18px;">
+          <table><thead><tr><th>Coal Component</th><th>Percentage</th></tr></thead>
+            <tbody>${(d.components||[]).map(c=>`<tr><td>${esc(c.coalName)}</td><td>${c.percentage}%</td></tr>`).join("")}
+              <tr style="font-weight:700;background:var(--gray-soft);"><td>TOTAL</td><td>${(d.components||[]).reduce((a,c)=>a+c.percentage,0)}%</td></tr>
+            </tbody></table>
+          <div style="margin-top:10px;font-size:13px;"><b>Remarks:</b> ${esc(d.remarks||"—")}</div>
+        </div>
+      </div>`).join("");
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function printCoalBlend(){
+  const docs=await fetchCoalBlendsFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("cbv-from").value;
+  const to=document.getElementById("cbv-to").value;
+  const w=window.open("","_blank");
+  const body=docs.map(d=>`
+    <div class="blk">
+      <div class="blk-head">${esc(d.plant||"—")} · ${esc(d.date)}</div>
+      <table><thead><tr><th>Coal Component</th><th>Percentage</th></tr></thead>
+        <tbody>${(d.components||[]).map(c=>`<tr><td>${esc(c.coalName)}</td><td>${c.percentage}%</td></tr>`).join("")}
+          <tr style="font-weight:700;background:#f1f5f9;"><td>TOTAL</td><td>${(d.components||[]).reduce((a,c)=>a+c.percentage,0)}%</td></tr>
+        </tbody></table>
+      <div style="margin-top:8px;font-size:12px;"><b>Remarks:</b> ${esc(d.remarks||"—")}</div>
+    </div>`).join("");
+  w.document.write(`<html><head><title>Coal Blend</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Coal Blend Report",`${from} to ${to}`)}${body}${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ TAB: PRODUCTION & QUALITY ================
+async function renderQuality(){
+  const edit=canEdit("quality");
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🧪 Coke Quality Index — HR</h2><div class="tag">${edit?"HR · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="grid grid-4">
+          <div><label class="lbl">DATE</label><input type="date" id="cq-date" value="${todayISO()}" onchange="loadExistingCQ()" /></div>
+          <div><label class="lbl">MOISTURE (%)</label><input type="number" step="0.01" id="cq-moist" /></div>
+          <div><label class="lbl">CSR</label><input type="number" step="0.01" id="cq-csr" /></div>
+          <div><label class="lbl">CRI</label><input type="number" step="0.01" id="cq-cri" /></div>
+          <div><label class="lbl">M10</label><input type="number" step="0.01" id="cq-m10" /></div>
+          <div><label class="lbl">M40</label><input type="number" step="0.01" id="cq-m40" /></div>
+        </div>
+        ${edit?`<div class="row-end"><button onclick="saveQuality()">💾 Save Coke Quality</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW COKE QUALITY</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="cqv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="cqv-to" value="${todayISO()}" /></div>
+          <div><button class="secondary" onclick="viewQuality()">🔍 View</button></div>
+          <div><button onclick="printQuality()">🖨️ Print Table</button></div>
+          <div><button onclick="printCQGraphs()">📈 Print Graphs</button></div>
+        </div>
+        <div id="cqv-results"></div>
+        <div class="section-label" style="margin-top:32px;">📈 GRAPH</div>
+        <div class="opt-wrap" style="margin-bottom:14px;">
+          ${MASTER.CQ_PARAMS.map(p=>`<div class="opt-btn selected" data-param="${p.key}" onclick="toggleCQParam('${p.key}',this)">${esc(p.label)}</div>`).join("")}
+        </div>
+        <div class="chart-wrap"><canvas id="cqChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>🔥 Blast Furnace Production (Hot Metal, tonnes)</h2><div class="tag">${edit?"HR · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="grid grid-2">
+          <div><label class="lbl">DATE</label><input type="date" id="bf-date" value="${todayISO()}" onchange="loadBFRows()" /></div>
+        </div>
+        <div class="msg info">Enter BF-wise hot metal production in sequence. Total is calculated automatically.</div>
+        <div id="bfRows"></div>
+        <div id="bfTotal" class="msg success" style="font-size:16px;font-weight:700;">Total Hot Metal: 0 tonnes</div>
+        ${edit?`<div class="row-end"><button onclick="saveBFProduction()">💾 Save Blast Furnace Production</button></div>`:""}
+        <div class="section-label" style="margin-top:26px;">📈 Trend (Last 7 Days)</div>
+        <div class="chart-wrap"><canvas id="bfChart"></canvas></div>
+      </div>
+    </div>
+  `;
+  await loadExistingCQ();
+  await loadBFRows();
+  drawCokeQualityChart();
+  drawBFTrendChart();
+}
+async function loadExistingCQ(){
+  const date=document.getElementById("cq-date").value;
+  try{
+    const snap=await FB.getDoc(FB.doc(FB.db,"cokeQuality",date));
+    if(!snap.exists()){ ["cq-moist","cq-csr","cq-cri","cq-m10","cq-m40"].forEach(id=>document.getElementById(id).value=""); return; }
+    const d=snap.data();
+    document.getElementById("cq-moist").value=d.moisture||"";
+    document.getElementById("cq-csr").value=d.csr||"";
+    document.getElementById("cq-cri").value=d.cri||"";
+    document.getElementById("cq-m10").value=d.m10||"";
+    document.getElementById("cq-m40").value=d.m40||"";
+  }catch(e){}
+}
+async function loadBFRows(){
+  const date=document.getElementById("bf-date").value;
+  const el=document.getElementById("bfRows");
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"bfProduction"));
+    const all=snap.docs.map(d=>d.data()).filter(d=>d.date===date);
+    el.innerHTML=MASTER.BLAST_FURNACES.map(bf=>{
+      const found=all.find(x=>x.bf===bf);
+      return `<div class="grid grid-2" style="margin-bottom:8px;align-items:center;">
+        <div style="font-weight:700;color:var(--navy);font-size:15px;">${esc(bf)}</div>
+        <input class="bf-val" data-bf="${esc(bf)}" type="number" step="0.01" placeholder="Hot Metal (tonnes)" value="${found?.hotMetal??""}" oninput="updateBFTotal()" />
+      </div>`;
+    }).join("");
+    updateBFTotal();
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+function updateBFTotal(){
+  let total=0;
+  document.querySelectorAll(".bf-val").forEach(i=>total+=Number(i.value||0));
+  document.getElementById("bfTotal").textContent=`Total Hot Metal: ${total.toLocaleString()} tonnes`;
+}
+async function saveBFProduction(){
+  const p=state.profile;
+  const date=document.getElementById("bf-date").value;
+  const entries=[];
+  document.querySelectorAll(".bf-val").forEach(i=>{
+    const v=Number(i.value||0);
+    if(v) entries.push({bf:i.dataset.bf,hotMetal:v});
+  });
+  if(!entries.length) return toast("Enter at least one BF value","error");
+  try{
+    for(const e of entries){
+      const docId=`${e.bf}_${date}`;
+      await FB.setDoc(FB.doc(FB.db,"bfProduction",docId),{bf:e.bf,date,hotMetal:e.hotMetal,createdBy:p.name,createdAt:FB.serverTimestamp()},{merge:true});
+    }
+    toast("BF production saved ✔","success");
+    drawBFTrendChart();
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function drawBFTrendChart(){
+  const canvas=document.getElementById("bfChart"); if(!canvas) return;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"bfProduction"));
+    const allDocs=snap.docs.map(d=>d.data()).filter(d=>d.date);
+    const days=last7Days();
+    const colors={"BF-4":"#3b82f6","BF-6":"#16a34a","BF-7":"#dc2626","BF-8":"#f59e0b"};
+    const datasets=MASTER.BLAST_FURNACES.map(bf=>({
+      label:bf,
+      data:days.map(dt=>{const f=allDocs.find(x=>x.date===dt&&x.bf===bf);return f?Number(f.hotMetal||0):0;}),
+      borderColor:colors[bf],tension:.3
+    }));
+    if(state.chartBFQuality) state.chartBFQuality.destroy();
+    state.chartBFQuality=new Chart(canvas.getContext("2d"),{type:"line",data:{labels:days,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:12}}}},scales:{x:{grid:{display:false}},y:{grid:{color:"#e5ecf3"}}}}});
+  }catch(e){ console.warn(e); }
+}
+async function saveQuality(){
+  const p=state.profile;
+  const date=document.getElementById("cq-date").value;
+  try{
+    await FB.setDoc(FB.doc(FB.db,"cokeQuality",date),{
+      date,
+      moisture:Number(document.getElementById("cq-moist").value||0),
+      csr:Number(document.getElementById("cq-csr").value||0),
+      cri:Number(document.getElementById("cq-cri").value||0),
+      m10:Number(document.getElementById("cq-m10").value||0),
+      m40:Number(document.getElementById("cq-m40").value||0),
+      createdBy:p.name,createdAt:FB.serverTimestamp()
+    },{merge:true});
+    toast("Saved ✔","success");
+    drawCokeQualityChart();
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function fetchQualityFiltered(){
+  const from=document.getElementById("cqv-from").value;
+  const to=document.getElementById("cqv-to").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"cokeQuality"));
+  return snap.docs.map(d=>d.data()).filter(d=>d.date>=from&&d.date<=to).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+}
+async function viewQuality(){
+  const el=document.getElementById("cqv-results");
+  el.innerHTML="Loading…";
+  try{
+    const docs=await fetchQualityFiltered();
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No entries.</div>`; return; }
+    el.innerHTML=`<table><thead><tr><th>Date</th><th>Moisture</th><th>CSR</th><th>CRI</th><th>M10</th><th>M40</th><th>By</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${d.moisture??"—"}</td><td>${d.csr??"—"}</td><td>${d.cri??"—"}</td><td>${d.m10??"—"}</td><td>${d.m40??"—"}</td><td>${esc(d.createdBy)}</td></tr>`).join("")}</tbody></table>`;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function printQuality(){
+  const docs=await fetchQualityFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("cqv-from").value;
+  const to=document.getElementById("cqv-to").value;
+  const w=window.open("","_blank");
+  w.document.write(`<html><head><title>Coke Quality Index</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Coke Quality Index Report",`${from} to ${to}`)}
+    <table><thead><tr><th>Date</th><th>Moisture</th><th>CSR</th><th>CRI</th><th>M10</th><th>M40</th><th>By</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${d.moisture??"—"}</td><td>${d.csr??"—"}</td><td>${d.cri??"—"}</td><td>${d.m10??"—"}</td><td>${d.m40??"—"}</td><td>${esc(d.createdBy)}</td></tr>`).join("")}</tbody></table>
+    ${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+async function printCQGraphs(){
+  const docs=await fetchQualityFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("cqv-from").value;
+  const to=document.getElementById("cqv-to").value;
+  const selected=Array.from(document.querySelectorAll("[data-param].selected")).map(el=>el.dataset.param);
+  if(!selected.length) return toast("Select at least one parameter","error");
+  const w=window.open("","_blank");
+  let chartsHTML="";
+  for(const key of selected){
+    const info=MASTER.CQ_PARAMS.find(p=>p.key===key);
+    chartsHTML+=`<div class="blk"><div class="blk-head">${esc(info.label)} — Trend</div><div style="height:280px;"><canvas id="chart-${key}"></canvas></div></div>`;
+  }
+  const script=`<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
+  <script>
+    const labels=${JSON.stringify(docs.map(d=>d.date))};
+    ${selected.map(key=>{const info=MASTER.CQ_PARAMS.find(p=>p.key===key);const data=docs.map(d=>Number(d[key]||0));
+      return `new Chart(document.getElementById('chart-${key}').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'${info.label}',data:${JSON.stringify(data)},borderColor:'${info.color}',backgroundColor:'${info.color}22',tension:.3,fill:true,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}}}}});`;
+    }).join("")}
+    setTimeout(()=>window.print(),800);
+  <\/script>`;
+  w.document.write(`<html><head><title>Coke Quality Graphs</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Coke Quality Index — Graphs",`${from} to ${to}`)}
+    ${chartsHTML}
+    ${printFooterHTML()}
+    ${script}
+  </body></html>`);
+  w.document.close();
+}
+function toggleCQParam(param,el){ el.classList.toggle("selected"); drawCokeQualityChart(); }
+async function drawCokeQualityChart(){
+  const canvas=document.getElementById("cqChart"); if(!canvas) return;
+  try{
+    const snap=await FB.getDocs(FB.collection(FB.db,"cokeQuality"));
+    const docs=snap.docs.map(d=>d.data()).filter(d=>d.date).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    const labels=docs.map(d=>d.date);
+    const selectedParams=Array.from(document.querySelectorAll("[data-param].selected")).map(el=>el.dataset.param);
+    const datasets=selectedParams.map(p=>{
+      const info=MASTER.CQ_PARAMS.find(x=>x.key===p);
+      return {label:info?info.label:p.toUpperCase(),data:docs.map(d=>Number(d[p]||0)),borderColor:info?info.color:"#0f2942",tension:.3};
+    });
+    if(state.chartCQ) state.chartCQ.destroy();
+    state.chartCQ=new Chart(canvas.getContext("2d"),{type:"line",data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:12}}}},scales:{x:{grid:{display:false}},y:{grid:{color:"#e5ecf3"}}}}});
+  }catch(e){ console.warn(e); }
+}
+
+// ================ TAB: ENVIRONMENT ================
+async function renderEnvironment(){
+  const edit=canEdit("environment");
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🌫️ Environment Details — Admin</h2><div class="tag">${edit?"Admin · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="grid grid-2"><div><label class="lbl">DATE</label><input type="date" id="env-date" value="${todayISO()}" onchange="loadExistingEnv()" /></div></div>
+        <div class="section-label">PLD — BATTERY WISE</div>
+        <div class="grid grid-4">
+          <div><label class="lbl">BATTERY 9 · PUSHER SIDE</label><input type="number" step="0.01" id="env-pld-b9-ps" /></div>
+          <div><label class="lbl">BATTERY 9 · COKE SIDE</label><input type="number" step="0.01" id="env-pld-b9-cs" /></div>
+          <div><label class="lbl">BATTERY 10 · PUSHER SIDE</label><input type="number" step="0.01" id="env-pld-b10-ps" /></div>
+          <div><label class="lbl">BATTERY 10 · COKE SIDE</label><input type="number" step="0.01" id="env-pld-b10-cs" /></div>
+        </div>
+        <div class="section-label">PLO & PLL</div>
+        <div class="grid grid-2">
+          <div><label class="lbl">PLO</label><input type="number" step="0.01" id="env-plo" /></div>
+          <div><label class="lbl">PLL</label><input type="number" step="0.01" id="env-pll" /></div>
+        </div>
+        ${edit?`<div class="row-end"><button onclick="saveEnvironment()">💾 Save Environment</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW ENVIRONMENT</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="envv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="envv-to" value="${todayISO()}" /></div>
+          <div><button class="secondary" onclick="viewEnvironment()">🔍 View</button></div>
+          <div><button onclick="printEnvironment()">🖨️ Print</button></div>
+        </div>
+        <div id="envv-results"></div>
+      </div>
+    </div>
+  `;
+  await loadExistingEnv();
+}
+async function loadExistingEnv(){
+  const date=document.getElementById("env-date").value;
+  try{
+    const snap=await FB.getDoc(FB.doc(FB.db,"environment",date));
+    if(!snap.exists()){
+      ["env-pld-b9-ps","env-pld-b9-cs","env-pld-b10-ps","env-pld-b10-cs","env-plo","env-pll"].forEach(id=>document.getElementById(id).value="");
+      return;
+    }
+    const d=snap.data();
+    const set=(id,v)=>{const el=document.getElementById(id);if(el) el.value=v??"";};
+    set("env-pld-b9-ps",d.pld?.b9_ps);set("env-pld-b9-cs",d.pld?.b9_cs);
+    set("env-pld-b10-ps",d.pld?.b10_ps);set("env-pld-b10-cs",d.pld?.b10_cs);
+    set("env-plo",d.plo);set("env-pll",d.pll);
+  }catch(e){}
+}
+async function saveEnvironment(){
+  const p=state.profile;
+  const date=document.getElementById("env-date").value;
+  try{
+    await FB.setDoc(FB.doc(FB.db,"environment",date),{
+      date,
+      pld:{b9_ps:Number(document.getElementById("env-pld-b9-ps").value||0),b9_cs:Number(document.getElementById("env-pld-b9-cs").value||0),b10_ps:Number(document.getElementById("env-pld-b10-ps").value||0),b10_cs:Number(document.getElementById("env-pld-b10-cs").value||0)},
+      plo:Number(document.getElementById("env-plo").value||0),
+      pll:Number(document.getElementById("env-pll").value||0),
+      createdBy:p.name,createdAt:FB.serverTimestamp()
+    },{merge:true});
+    toast("Environment saved ✔","success");
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function fetchEnvironmentFiltered(){
+  const from=document.getElementById("envv-from").value;
+  const to=document.getElementById("envv-to").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"environment"));
+  return snap.docs.map(d=>d.data()).filter(d=>d.date>=from&&d.date<=to).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+}
+async function viewEnvironment(){
+  const el=document.getElementById("envv-results");
+  el.innerHTML="Loading…";
+  try{
+    const docs=await fetchEnvironmentFiltered();
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No entries.</div>`; return; }
+    el.innerHTML=`<table><thead><tr><th>Date</th><th>PLD B9 PS</th><th>PLD B9 CS</th><th>PLD B10 PS</th><th>PLD B10 CS</th><th>PLO</th><th>PLL</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${d.pld?.b9_ps??"—"}</td><td>${d.pld?.b9_cs??"—"}</td><td>${d.pld?.b10_ps??"—"}</td><td>${d.pld?.b10_cs??"—"}</td><td>${d.plo??"—"}</td><td>${d.pll??"—"}</td></tr>`).join("")}</tbody></table>`;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function printEnvironment(){
+  const docs=await fetchEnvironmentFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("envv-from").value;
+  const to=document.getElementById("envv-to").value;
+  const w=window.open("","_blank");
+  w.document.write(`<html><head><title>Environment</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Environment Report",`${from} to ${to}`)}
+    <table><thead><tr><th>Date</th><th>PLD B9 PS</th><th>PLD B9 CS</th><th>PLD B10 PS</th><th>PLD B10 CS</th><th>PLO</th><th>PLL</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${d.pld?.b9_ps??"—"}</td><td>${d.pld?.b9_cs??"—"}</td><td>${d.pld?.b10_ps??"—"}</td><td>${d.pld?.b10_cs??"—"}</td><td>${d.plo??"—"}</td><td>${d.pll??"—"}</td></tr>`).join("")}</tbody></table>
+    ${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ TAB: RAIL ================
+async function renderRail(){
+  const edit=canEdit("rail");
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>🛤️ Rail Change Details — Admin</h2><div class="tag">${edit?"Admin · Editable":"Read-only"}</div></div>
+      <div class="card-body">
+        <div class="grid grid-3">
+          <div><label class="lbl">DATE</label><input type="date" id="rc-date" value="${todayISO()}" /></div>
+          <div><label class="lbl">TRACK</label><select id="rc-track">${MASTER.RAIL_TRACKS.map(t=>`<option>${t}</option>`).join("")}</select></div>
+          <div><label class="lbl">LOCATION / POSITION</label><input id="rc-loc" placeholder="e.g. Near oven 940" /></div>
+          <div style="grid-column:span 3;"><label class="lbl">DETAILS</label><input id="rc-details" /></div>
+        </div>
+        ${edit?`<div class="row-end"><button onclick="saveRail()">💾 Save Rail Change</button></div>`:""}
+        <div class="section-label" style="margin-top:32px;">VIEW RAIL CHANGES</div>
+        <div class="vp-bar">
+          <div><label class="lbl">FROM</label><input type="date" id="rcv-from" value="${todayISO()}" /></div>
+          <div><label class="lbl">TO</label><input type="date" id="rcv-to" value="${todayISO()}" /></div>
+          <div><button class="secondary" onclick="viewRails()">🔍 View</button></div>
+          <div><button onclick="printRails()">🖨️ Print</button></div>
+        </div>
+        <div id="rcv-results"></div>
+      </div>
+    </div>
+  `;
+}
+async function saveRail(){
+  const p=state.profile;
+  try{
+    await FB.addDoc(FB.collection(FB.db,"railChanges"),{
+      date:document.getElementById("rc-date").value,
+      track:document.getElementById("rc-track").value,
+      location:document.getElementById("rc-loc").value,
+      details:document.getElementById("rc-details").value,
+      createdBy:p.name,createdAt:FB.serverTimestamp()
+    });
+    toast("Saved ✔","success");
+  }catch(e){ toast("Save failed: "+e.message,"error"); }
+}
+async function fetchRailsFiltered(){
+  const from=document.getElementById("rcv-from").value;
+  const to=document.getElementById("rcv-to").value;
+  const snap=await FB.getDocs(FB.collection(FB.db,"railChanges"));
+  return snap.docs.map(d=>d.data()).filter(d=>d.date>=from&&d.date<=to).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+}
+async function viewRails(){
+  const el=document.getElementById("rcv-results");
+  el.innerHTML="Loading…";
+  try{
+    const docs=await fetchRailsFiltered();
+    if(!docs.length){ el.innerHTML=`<div style="color:var(--muted);">No rail changes in period.</div>`; return; }
+    el.innerHTML=`<table><thead><tr><th>Date</th><th>Track</th><th>Location</th><th>Details</th><th>By</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${esc(d.track)}</td><td>${esc(d.location)}</td><td>${esc(d.details)}</td><td>${esc(d.createdBy)}</td></tr>`).join("")}</tbody></table>`;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function printRails(){
+  const docs=await fetchRailsFiltered();
+  if(!docs.length) return toast("No data","error");
+  const from=document.getElementById("rcv-from").value;
+  const to=document.getElementById("rcv-to").value;
+  const w=window.open("","_blank");
+  w.document.write(`<html><head><title>Rail Changes</title>${printStyles()}</head><body>
+    ${printHeaderHTML("Rail Changes Report",`${from} to ${to}`)}
+    <table><thead><tr><th>Date</th><th>Track</th><th>Location</th><th>Details</th><th>By</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr><td>${esc(d.date)}</td><td>${esc(d.track)}</td><td>${esc(d.location)}</td><td>${esc(d.details)}</td><td>${esc(d.createdBy)}</td></tr>`).join("")}</tbody></table>
+    ${printFooterHTML()}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+}
+
+// ================ USERS ================
+async function renderUsers(){
+  if(state.profile.role!=="admin"){
+    document.getElementById("pageContent").innerHTML=`<div class="card"><div class="card-body"><div class="msg error">Only admin.</div></div></div>`;
+    return;
+  }
+  document.getElementById("pageContent").innerHTML=`
+    <div class="card">
+      <div class="card-head"><h2>👥 User Management</h2><div class="tag">Admin</div></div>
+      <div class="card-body">
+        <div class="subtabs">
+          <div class="subtab active" onclick="loadUsers('pending',this)">Pending</div>
+          <div class="subtab" onclick="loadUsers('approved',this)">Approved</div>
+          <div class="subtab" onclick="loadUsers('rejected',this)">Rejected</div>
+        </div>
+        <div id="usersList">Loading…</div>
+      </div>
+    </div>
+  `;
+  loadUsers("pending");
+}
+async function loadUsers(status,tabEl){
+  if(tabEl){
+    document.querySelectorAll("#pageContent .subtab").forEach(t=>t.classList.remove("active"));
+    tabEl.classList.add("active");
+  }
+  const el=document.getElementById("usersList");
+  el.textContent="Loading…";
+  try{
+    const q=FB.query(FB.collection(FB.db,"users"),FB.where("status","==",status));
+    const snap=await FB.getDocs(q);
+    if(snap.empty){ el.innerHTML=`<div style="color:var(--muted);padding:20px 0;">No ${status} users.</div>`; return; }
+    el.innerHTML=`
+      <table><thead><tr><th>Name</th><th>Designation</th><th>Phone</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+      <tbody>${snap.docs.map(d=>{
+        const u=d.data(); const uid=d.id;
+        return `<tr><td>${esc(u.name)}</td><td>${esc(u.designation)}</td><td>${esc(u.phone||"—")}</td><td>${esc(u.email)}</td>
+          <td><span class="pill blue">${esc(u.role)}</span></td>
+          <td>${status!=="approved"?`<button class="small success" onclick="updateUserStatus('${uid}','approved')">Approve</button>`:""}
+          ${status!=="rejected"?`<button class="small danger" onclick="updateUserStatus('${uid}','rejected')" style="margin-left:6px;">Reject</button>`:""}</td>
+        </tr>`;
+      }).join("")}</tbody></table>`;
+  }catch(e){ el.innerHTML=`<div class="msg error">${esc(e.message)}</div>`; }
+}
+async function updateUserStatus(uid,status){
+  try{
+    await FB.updateDoc(FB.doc(FB.db,"users",uid),{status,approvedBy:state.profile.name,approvedAt:FB.serverTimestamp()});
+    toast("User "+status,"success");
+    const activeTab=document.querySelector("#pageContent .subtab.active");
+    const tabName=activeTab?activeTab.textContent.trim().toLowerCase():"pending";
+    loadUsers(tabName);
+  }catch(e){ toast(e.message,"error"); }
+}
+
+// ================ BOOT ================
+window.addEventListener("fb-ready",()=>initAuthListener());
+window.addEventListener("load",()=>{ if(window.FB) initAuthListener(); });
+</script>
+</body>
+</html>
